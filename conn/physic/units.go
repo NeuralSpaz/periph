@@ -71,9 +71,6 @@ const (
 
 // Set takes a string and tries to return a valid Angle.
 func (a *Angle) Set(s string) error {
-	const (
-		angleBase int = nano
-	)
 	r := []rune(s)
 	v, n, err := parseNumber(r)
 	if err != nil {
@@ -83,13 +80,12 @@ func (a *Angle) Set(s string) error {
 	if !(n == len(r)) {
 		prefix = parseSIPrefix(r[n])
 	}
-	scale := math.Pow10(int(prefix) - angleBase)
+	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
-		r = r[n+1:]
+		s = string(r[n+1:])
 	} else {
-		r = r[n:]
+		s = string(r[n:])
 	}
-	s = string(r)
 	switch s {
 	case "°", "Degrees":
 		*a = (Angle)(int64(scale * v * float64(Degree) / float64(Radian)))
@@ -134,9 +130,6 @@ const (
 
 // Set takes a string and tries to return a valid Distance.
 func (d *Distance) Set(s string) error {
-	const (
-		distanceBase int = nano
-	)
 	r := []rune(s)
 	v, n, err := parseNumber(r)
 	if err != nil {
@@ -158,7 +151,7 @@ func (d *Distance) Set(s string) error {
 			prefix = none
 		}
 	}
-	scale := math.Pow10(int(prefix) - distanceBase)
+	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
 		s = string(r[n+1:])
 	} else {
@@ -203,7 +196,7 @@ func (e *ElectricCurrent) Set(s string) error {
 	if !(n == len(r)) {
 		prefix = parseSIPrefix(r[n])
 	}
-	scale := math.Pow10(int(prefix) - int(nano))
+	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
 		s = string(r[n+1:])
 	} else {
@@ -240,7 +233,30 @@ func (e ElectricPotential) String() string {
 }
 
 // Set takes a string and tries to return a valid ElectricPotential.
-func (e ElectricPotential) Set(s string) error { return errors.New("not implemented") }
+func (e *ElectricPotential) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "V", "v", "volt", "Volt", "volts", "Volts":
+		fallthrough
+	default:
+		*e = (ElectricPotential)(int64(scale * v * float64(NanoVolt)))
+	}
+	return nil
+}
 
 const (
 	// Volt is W/A, kg⋅m²/s³/A.
@@ -249,6 +265,8 @@ const (
 	MilliVolt ElectricPotential = 1000 * MicroVolt
 	Volt      ElectricPotential = 1000 * MilliVolt
 	KiloVolt  ElectricPotential = 1000 * Volt
+	MegaVolt  ElectricPotential = 1000 * KiloVolt
+	GigaVolt  ElectricPotential = 1000 * MegaVolt
 )
 
 // ElectricResistance is a measurement of the difficulty to pass an electric
@@ -263,7 +281,30 @@ func (e ElectricResistance) String() string {
 }
 
 // Set takes a string and tries to return a valid ElectricResistance.
-func (e ElectricResistance) Set(s string) error { return errors.New("not implemented") }
+func (e *ElectricResistance) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "Ohm", "Ohms", "ohm", "ohms", "Ω":
+		fallthrough
+	default:
+		*e = (ElectricResistance)(int64(scale * v * float64(NanoOhm)))
+	}
+	return nil
+}
 
 const (
 	// Ohm is V/A, kg⋅m²/s³/A².
@@ -273,6 +314,7 @@ const (
 	Ohm      ElectricResistance = 1000 * MilliOhm
 	KiloOhm  ElectricResistance = 1000 * Ohm
 	MegaOhm  ElectricResistance = 1000 * KiloOhm
+	GigaOhm  ElectricResistance = 1000 * MegaOhm
 )
 
 // Force is a measurement of interaction that will change the motion of an
@@ -324,9 +366,6 @@ func (f Frequency) String() string {
 // Set takes a string and tries to return a valid Frequency.
 
 func (f *Frequency) Set(s string) error {
-	const (
-		freqBase int = micro
-	)
 	r := []rune(s)
 	v, n, err := parseNumber(r)
 	if err != nil {
@@ -337,13 +376,12 @@ func (f *Frequency) Set(s string) error {
 		prefix = parseSIPrefix(r[n])
 
 	}
-	scale := math.Pow10(int(prefix) - freqBase)
+	scale := math.Pow10(int(prefix - micro))
 	if prefix != none {
-		r = r[n+1:]
+		s = string(r[n+1:])
 	} else {
-		r = r[n:]
+		s = string(r[n:])
 	}
-	s = string(r)
 	switch s {
 	case "Hz":
 		fallthrough
@@ -516,13 +554,41 @@ func (t Temperature) String() string {
 }
 
 // Set takes a string and tries to return a valid Temperature.
-func (t Temperature) Set(str string) error { return errors.New("not implemented") }
+func (t *Temperature) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "K":
+		*t = (Temperature)(int64(scale * v * float64(NanoKelvin)))
+	case "C", "°C":
+		fallthrough
+	default:
+		*t = (Temperature)(int64(scale*v + float64(ZeroCelsius)))
+	}
+	return nil
+}
 
 const (
 	NanoKelvin  Temperature = 1
 	MicroKelvin Temperature = 1000 * NanoKelvin
 	MilliKelvin Temperature = 1000 * MicroKelvin
 	Kelvin      Temperature = 1000 * MilliKelvin
+	KiloKelvin  Temperature = 1000 * Kelvin
+	MegaKelvin  Temperature = 1000 * KiloKelvin
+	GigaKelvin  Temperature = 1000 * MegaKelvin
 
 	// Conversion between Kelvin and Celsius.
 	ZeroCelsius  Temperature = 273150 * MilliKelvin
@@ -546,7 +612,30 @@ func (p Power) String() string {
 }
 
 // Set takes a string and tries to return a valid Power.
-func (p Power) Set(str string) error { return errors.New("not implemented") }
+func (p *Power) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "watt", "watts", "Watt", "Watts", "W", "w":
+		fallthrough
+	default:
+		*p = (Power)(int64(scale * v * float64(NanoWatt)))
+	}
+	return nil
+}
 
 const (
 	// Watt is unit of power J/s, kg⋅m²⋅s⁻³
@@ -570,7 +659,30 @@ func (e Energy) String() string {
 }
 
 // Set takes a string and tries to return a valid Energy.
-func (e Energy) Set(str string) error { return errors.New("not implemented") }
+func (e *Energy) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "Joule", "Joules", "joule", "joules", "J", "j":
+		fallthrough
+	default:
+		*e = (Energy)(int64(scale * v * float64(NanoJoule)))
+	}
+	return nil
+}
 
 const (
 	// Joule is a unit of work. kg⋅m²⋅s⁻²
@@ -608,7 +720,7 @@ func (e *ElectricalCapacitance) Set(s string) error {
 			prefix = none
 		}
 	}
-	scale := math.Pow10(int(prefix) - int(pico))
+	scale := math.Pow10(int(prefix - pico))
 	if prefix != none {
 		s = string(r[n+1:])
 	} else {
