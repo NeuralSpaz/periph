@@ -1232,7 +1232,7 @@ func TestSpeed_Set(t *testing.T) {
 		{"1Mm/s", "1Mm/s", 1 * MegaMetrePerSecond},
 		{"10Mm/s", "10Mm/s", 10 * MegaMetrePerSecond},
 		{"100Mm/s", "100Mm/s", 100 * MegaMetrePerSecond},
-		{"1Glm", "1Glm", 1 * GigaMetrePerSecond},
+		{"1Gm/s", "1Gm/s", 1 * GigaMetrePerSecond},
 		{"m/s", "m/s", 1 * MetrePerSecond},
 		{"km/h", "km/h", 1 * KilometrePerHour},
 		{"mph", "mph", 1 * MilePerHour},
@@ -1245,6 +1245,143 @@ func TestSpeed_Set(t *testing.T) {
 			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
 			fs.Var(&got, "s", "value of speed")
 			fs.Parse([]string{"-s", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestMass_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Mass
+	}{
+
+		{"1ng", "1ng", 1 * NanoGram},
+		{"10ng", "10ng", 10 * NanoGram},
+		{"100ng", "100ng", 100 * NanoGram},
+		{"1ug", "1ug", 1 * MicroGram},
+		{"10ug", "10ug", 10 * MicroGram},
+		{"100ug", "100ug", 100 * MicroGram},
+		{"1µg", "1µg", 1 * MicroGram},
+		{"10µg", "10µg", 10 * MicroGram},
+		{"100µg", "100µg", 100 * MicroGram},
+		{"1mg", "1mg", 1 * MilliGram},
+		{"10mg", "10mg", 10 * MilliGram},
+		{"100mg", "100mg", 100 * MilliGram},
+		{"1g", "1g", 1 * Gram},
+		{"10g", "10g", 10 * Gram},
+		{"100g", "100g", 100 * Gram},
+		{"1kg", "1kg", 1 * KiloGram},
+		{"10kg", "10kg", 10 * KiloGram},
+		{"100kg", "100kg", 100 * KiloGram},
+		{"1Mg", "1Mg", 1 * MegaGram},
+		{"10Mg", "10Mg", 10 * MegaGram},
+		{"100Mg", "100Mg", 100 * MegaGram},
+		{"1Gg", "1Gg", 1 * GigaGram},
+		{"gram", "gram", 1 * Gram},
+		{"Gram", "Gram", 1 * Gram},
+		{"grams", "grams", 1 * Gram},
+		{"Grams", "Grams", 1 * Gram},
+		{"ounce", "ounce", 1 * OunceMass},
+		{"Ounce", "Ounce", 1 * OunceMass},
+		{"Ounces", "Ounces", 1 * OunceMass},
+		{"ounces", "ounces", 1 * OunceMass},
+		{"tonne", "tonne", 1 * Tonne},
+		{"tonnes", "tonnes", 1 * Tonne},
+		{"Tonne", "Tonne", 1 * Tonne},
+		{"Tonnes", "Tonnes", 1 * Tonne},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Mass
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "m", "value of mass")
+			fs.Parse([]string{"-m", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestForce_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Force
+	}{
+
+		{"1nN", "1nN", 1 * NanoNewton},
+		{"10nN", "10nN", 10 * NanoNewton},
+		{"100nN", "100nN", 100 * NanoNewton},
+		{"1uN", "1uN", 1 * MicroNewton},
+		{"10uN", "10uN", 10 * MicroNewton},
+		{"100uN", "100uN", 100 * MicroNewton},
+		{"1µN", "1µN", 1 * MicroNewton},
+		{"10µN", "10µN", 10 * MicroNewton},
+		{"100µN", "100µN", 100 * MicroNewton},
+		{"1mN", "1mN", 1 * MilliNewton},
+		{"10mN", "10mN", 10 * MilliNewton},
+		{"100mN", "100mN", 100 * MilliNewton},
+		{"1N", "1N", 1 * Newton},
+		{"10N", "10N", 10 * Newton},
+		{"100N", "100N", 100 * Newton},
+		{"1kN", "1kN", 1 * KiloNewton},
+		{"10kN", "10kN", 10 * KiloNewton},
+		{"100kN", "100kN", 100 * KiloNewton},
+		{"1MN", "1MN", 1 * MegaNewton},
+		{"10MN", "10MN", 10 * MegaNewton},
+		{"100MN", "100MN", 100 * MegaNewton},
+		{"1GN", "1GN", 1 * GigaNewton},
+		{"Newton", "Newton", 1 * Newton},
+		{"newton", "newton", 1 * Newton},
+		{"newtons", "newtons", 1 * Newton},
+		{"Newtons", "Newtons", 1 * Newton},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Force
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "f", "value of force")
+			fs.Parse([]string{"-f", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestRelativeHumidity_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want RelativeHumidity
+	}{
+		{"1rh", (1 * PercentRH).String(), 1 * PercentRH},
+		{"rh", (1 * PercentRH).String(), 1 * PercentRH},
+		{"rh", (1 * PercentRH).String(), 1 * PercentRH},
+		{"0.00001%rH", "0.00001%rH", 1 * TenthMicroRH},
+		{"0.0001%rH", "0.0001%rH", 1 * MicroRH},
+		{"1mrH", "1mrH", 1 * MilliRH},
+		{"1urH", "1urH", 1 * MicroRH},
+		{"0.1%rH", "0.1%rH", 1 * MilliRH},
+		{"1%rH", "1%rH", 1 * PercentRH},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got RelativeHumidity
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "f", "value of humidity")
+			fs.Parse([]string{"-f", tt.s})
 			if got != tt.want {
 				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
 			}
@@ -1303,11 +1440,11 @@ func TestMeta_Set(t *testing.T) {
 		{"ElectricPotential", &volt, "1", false},
 		{"ElectricResistance", &ohm, "1", false},
 		{"ElectricalCapacitance", &farad, "1", false},
-		// {"Force", &newton, "1", false},
+		{"Force", &newton, "1", false},
 		{"Frequency", &hertz, "1", false},
-		// {"Mass", &gram, "1", false},
+		{"Mass", &gram, "1", false},
 		{"Pressure", &pascal, "1", false},
-		// {"RelativeHumidity", &humidity, "1", false},
+		{"RelativeHumidity", &humidity, "1", false},
 		{"Speed", &metresPerSecond, "1", false},
 		{"Temperature", &celsius, "1", false},
 		{"Power", &watt, "1", false},
