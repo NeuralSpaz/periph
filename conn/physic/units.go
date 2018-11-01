@@ -5,8 +5,10 @@
 package physic
 
 import (
+	"errors"
 	"strconv"
 	"time"
+	"unicode"
 )
 
 // Angle is the measurement of the difference in orientation between two vectors
@@ -66,6 +68,45 @@ const (
 	Degree Angle = 17453293 * NanoRadian
 )
 
+// Set takes a string and tries to return a valid Angle.
+func (a *Angle) Set(s string) error {
+	if !unicode.IsDigit(rune(s[0])) {
+		return errors.New("does not start with digit")
+	}
+	end := 0
+	for i := end + 1; i < len(s) && (unicode.IsDigit(rune(s[i])) || rune(s[i]) == '.'); i++ {
+		end++
+	}
+	end++
+	value, err := strconv.ParseFloat(s[:end], 64)
+	if err != nil {
+		return errors.New("is not a number")
+	}
+	switch s[end:] {
+	case "Degrees":
+		*a = (Angle)(int64(value * float64(Degree)))
+	case "nRadians":
+		*a = (Angle)(int64(value * float64(NanoRadian)))
+	case "uRadians":
+		*a = (Angle)(int64(value * float64(MicroRadian)))
+	case "mRadians":
+		*a = (Angle)(int64(value * float64(MilliRadian)))
+	case "Radians":
+		*a = (Angle)(int64(value * float64(Radian)))
+	case "ThetaRadians":
+		*a = (Angle)(int64(value * float64(Theta)))
+	case "PiRadians":
+		*a = (Angle)(int64(value * float64(Pi)))
+	case "Pi":
+		*a = (Angle)(int64(value * float64(Pi)))
+	case "Theta":
+		*a = (Angle)(int64(value * float64(Theta)))
+	default:
+		*a = (Angle)(int64(value * float64(Radian)))
+	}
+	return nil
+}
+
 // Distance is a measurement of length stored as an int64 nano metre.
 //
 // This is one of the base unit in the International System of Units.
@@ -94,6 +135,9 @@ const (
 	Mile Distance = 1760 * Yard
 )
 
+// Set takes a string and tries to return a valid Distance.
+func (d Distance) Set(s string) error { return errors.New("not implemented") }
+
 // ElectricCurrent is a measurement of a flow of electric charge stored as an
 // int64 nano Ampere.
 //
@@ -106,6 +150,9 @@ type ElectricCurrent int64
 func (e ElectricCurrent) String() string {
 	return nanoAsString(int64(e)) + "A"
 }
+
+// Set takes a string and tries to return a valid ElectricCurrent.
+func (e ElectricCurrent) Set(s string) error { return errors.New("not implemented") }
 
 const (
 	NanoAmpere  ElectricCurrent = 1
@@ -124,6 +171,9 @@ type ElectricPotential int64
 func (e ElectricPotential) String() string {
 	return nanoAsString(int64(e)) + "V"
 }
+
+// Set takes a string and tries to return a valid ElectricPotential.
+func (e ElectricPotential) Set(s string) error { return errors.New("not implemented") }
 
 const (
 	// Volt is W/A, kg⋅m²/s³/A.
@@ -144,6 +194,9 @@ type ElectricResistance int64
 func (e ElectricResistance) String() string {
 	return nanoAsString(int64(e)) + "Ω"
 }
+
+// Set takes a string and tries to return a valid ElectricResistance.
+func (e ElectricResistance) Set(s string) error { return errors.New("not implemented") }
 
 const (
 	// Ohm is V/A, kg⋅m²/s³/A².
@@ -169,6 +222,9 @@ type Force int64
 func (f Force) String() string {
 	return nanoAsString(int64(f)) + "N"
 }
+
+// Set takes a string and tries to return a valid Force.
+func (f Force) Set(s string) error { return errors.New("not implemented") }
 
 const (
 	// Newton is kg⋅m/s².
@@ -197,6 +253,9 @@ type Frequency int64
 func (f Frequency) String() string {
 	return microAsString(int64(f)) + "Hz"
 }
+
+// Set takes a string and tries to return a valid Frequency.
+func (f Frequency) Set(s string) error { return errors.New("not implemented") }
 
 // Duration returns the duration of one cycle at this frequency.
 func (f Frequency) Duration() time.Duration {
@@ -232,6 +291,9 @@ func (m Mass) String() string {
 	return nanoAsString(int64(m)) + "g"
 }
 
+// Set takes a string and tries to return a valid Mass.
+func (m Mass) Set(s string) error { return errors.New("not implemented") }
+
 const (
 	NanoGram  Mass = 1
 	MicroGram Mass = 1000 * NanoGram
@@ -263,6 +325,9 @@ func (p Pressure) String() string {
 	return nanoAsString(int64(p)) + "Pa"
 }
 
+// Set takes a string and tries to return a valid Pressure.
+func (p Pressure) Set(s string) error { return errors.New("not implemented") }
+
 const (
 	// Pascal is N/m², kg/m/s².
 	NanoPascal  Pressure = 1
@@ -293,6 +358,9 @@ func (r RelativeHumidity) String() string {
 	return strconv.Itoa(int(r)/10) + "." + strconv.Itoa(frac) + "%rH"
 }
 
+// Set takes a string and tries to return a valid RelativeHumidity.
+func (r RelativeHumidity) Set(s string) error { return errors.New("not implemented") }
+
 const (
 	TenthMicroRH RelativeHumidity = 1                 // 0.00001%rH
 	MicroRH      RelativeHumidity = 10 * TenthMicroRH // 0.0001%rH
@@ -310,6 +378,9 @@ type Speed int64
 func (s Speed) String() string {
 	return nanoAsString(int64(s)) + "m/s"
 }
+
+// Set takes a string and tries to return a valid Speed.
+func (s Speed) Set(str string) error { return nil }
 
 const (
 	// MetrePerSecond is m/s.
@@ -339,6 +410,9 @@ func (t Temperature) String() string {
 	return nanoAsString(int64(t-ZeroCelsius)) + "°C"
 }
 
+// Set takes a string and tries to return a valid Temperature.
+func (t Temperature) Set(str string) error { return nil }
+
 const (
 	NanoKelvin  Temperature = 1
 	MicroKelvin Temperature = 1000 * NanoKelvin
@@ -366,6 +440,9 @@ func (p Power) String() string {
 	return nanoAsString(int64(p)) + "W"
 }
 
+// Set takes a string and tries to return a valid Power.
+func (p Power) Set(str string) error { return nil }
+
 const (
 	// Watt is unit of power J/s, kg⋅m²⋅s⁻³
 	NanoWatt  Power = 1
@@ -387,6 +464,9 @@ func (e Energy) String() string {
 	return nanoAsString(int64(e)) + "J"
 }
 
+// Set takes a string and tries to return a valid Energy.
+func (e Energy) Set(str string) error { return nil }
+
 const (
 	// Joule is a unit of work. kg⋅m²⋅s⁻²
 	NanoJoule  Energy = 1
@@ -407,6 +487,9 @@ type ElectricalCapacitance int64
 func (c ElectricalCapacitance) String() string {
 	return picoAsString(int64(c)) + "F"
 }
+
+// Set takes a string and tries to return a valid ElectricalCapacitance.
+func (e ElectricalCapacitance) Set(str string) error { return nil }
 
 const (
 	// Farad is a unit of capacitance. kg⁻¹⋅m⁻²⋅s⁴A²
@@ -436,6 +519,9 @@ func (l LuminousIntensity) String() string {
 	return nanoAsString(int64(l)) + "cd"
 }
 
+// Set takes a string and tries to return a valid LuminousIntensity.
+func (l LuminousIntensity) Set(str string) error { return nil }
+
 const (
 	// Candela is a unit of luminous intensity. cd
 	NanoCandela  LuminousIntensity = 1
@@ -461,6 +547,9 @@ type LuminousFlux int64
 func (f LuminousFlux) String() string {
 	return nanoAsString(int64(f)) + "lm"
 }
+
+// Set takes a string and tries to return a valid LuminousFlux.
+func (l LuminousFlux) Set(str string) error { return nil }
 
 const (
 	// Lumen is a unit of luminous flux. cd⋅sr
