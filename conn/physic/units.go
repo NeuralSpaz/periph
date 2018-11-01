@@ -6,6 +6,7 @@ package physic
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"time"
 	"unicode"
@@ -70,39 +71,36 @@ const (
 
 // Set takes a string and tries to return a valid Angle.
 func (a *Angle) Set(s string) error {
-	if !unicode.IsDigit(rune(s[0])) {
-		return errors.New("does not start with digit")
-	}
-	end := 0
-	for i := end + 1; i < len(s) && (unicode.IsDigit(rune(s[i])) || rune(s[i]) == '.'); i++ {
-		end++
-	}
-	end++
-	value, err := strconv.ParseFloat(s[:end], 64)
+	const (
+		angleBase int = nano
+	)
+	v, n, err := parseNumber(s)
 	if err != nil {
-		return errors.New("is not a number")
+		return err
 	}
-	switch s[end:] {
+	prefix := prefix(none)
+	scale := math.Pow10(int(prefix) - angleBase)
+
+	if !(n == len(s)) {
+		prefix = parseSIPrefix([]rune(s)[n])
+		scale = math.Pow10(int(prefix) - angleBase)
+	}
+	if prefix != none {
+		s = s[n+1:]
+	} else {
+		s = s[n:]
+	}
+	switch s {
+	case "°":
+		fallthrough
 	case "Degrees":
-		*a = (Angle)(int64(value * float64(Degree)))
-	case "nRadians":
-		*a = (Angle)(int64(value * float64(NanoRadian)))
-	case "uRadians":
-		*a = (Angle)(int64(value * float64(MicroRadian)))
-	case "mRadians":
-		*a = (Angle)(int64(value * float64(MilliRadian)))
+		*a = (Angle)(int64((scale * v) / float64(Radian) * float64(Degree)))
 	case "Radians":
-		*a = (Angle)(int64(value * float64(Radian)))
-	case "ThetaRadians":
-		*a = (Angle)(int64(value * float64(Theta)))
-	case "PiRadians":
-		*a = (Angle)(int64(value * float64(Pi)))
+		*a = (Angle)(int64(scale * v))
 	case "Pi":
-		*a = (Angle)(int64(value * float64(Pi)))
-	case "Theta":
-		*a = (Angle)(int64(value * float64(Theta)))
+		*a = (Angle)(int64(v * float64(Pi)))
 	default:
-		*a = (Angle)(int64(value * float64(Radian)))
+		*a = (Angle)(int64(scale * v * float64(NanoRadian)))
 	}
 	return nil
 }
@@ -255,13 +253,48 @@ func (f Frequency) String() string {
 }
 
 // Set takes a string and tries to return a valid Frequency.
-func (f Frequency) Set(s string) error { return errors.New("not implemented") }
+
+func (f *Frequency) Set(s string) error {
+	const (
+		freqBase int = micro
+	)
+	v, n, err := parseNumber(s)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	scale := math.Pow10(int(prefix) - freqBase)
+	if !(n == len(s)) {
+		prefix = parseSIPrefix([]rune(s)[n])
+		scale = math.Pow10(int(prefix) - freqBase)
+	}
+	if prefix != none {
+		s = s[n+1:]
+	} else {
+		s = s[n:]
+	}
+	switch s {
+	case "Hz":
+		fallthrough
+	default:
+		*f = (Frequency)(int64(scale * v * float64(MicroHertz)))
+	}
+	return nil
+}
 
 // Duration returns the duration of one cycle at this frequency.
 func (f Frequency) Duration() time.Duration {
 	// Note: Duration() should have been named Period().
 	// TODO(maruel): Rounding should be fine-tuned.
 	return time.Second * time.Duration(Hertz) / time.Duration(f)
+}
+
+//ParseFrequency takes a string and returns a frequency. Formating of string is
+// 10MHz, 100µHz etc.
+func ParseFrequency(s string) (Frequency, error) {
+	var f Frequency
+	err := f.Set(s)
+	return f, err
 }
 
 // PeriodToFrequency returns the frequency for a period of this interval.
@@ -277,6 +310,7 @@ const (
 	KiloHertz  Frequency = 1000 * Hertz
 	MegaHertz  Frequency = 1000 * KiloHertz
 	GigaHertz  Frequency = 1000 * MegaHertz
+	TeraHertz  Frequency = 1000 * GigaHertz
 )
 
 // Mass is a measurement of mass stored as an int64 nano gram.
@@ -807,4 +841,67 @@ func picoAsString(v int64) string {
 		return sign + strconv.Itoa(base) + unit
 	}
 	return sign + strconv.Itoa(base) + "." + prefixZeros(3, frac) + unit
+}
+
+func parseNumber(s string) (float64, int, error) {
+	n := 0
+	for i := n + 1; i < len(s); i++ {
+		switch {
+		case rune(s[n]) == '-':
+			fallthrough
+		case unicode.IsDigit(rune(s[i])):
+			fallthrough
+		case rune(s[i]) == '.':
+			n++
+		default:
+			break
+		}
+	}
+	n++
+	value, err := strconv.ParseFloat(s[:n], 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	return value, n, err
+}
+
+type prefix int
+
+const (
+	pico  prefix = -12
+	nano         = -9
+	micro        = -6
+	milli        = -3
+	none         = 0
+	deca         = 1
+	hecto        = 2
+	kilo         = 3
+	mega         = 6
+	giga         = 9
+	tera         = 12
+)
+
+func parseSIPrefix(r rune) prefix {
+	switch r {
+	case 'p':
+		return pico
+	case 'n':
+		return nano
+	case 'u':
+		return micro
+	case 'µ':
+		return micro
+	case 'm':
+		return milli
+	case 'k':
+		return kilo
+	case 'M':
+		return mega
+	case 'G':
+		return giga
+	case 'T':
+		return tera
+	default:
+		return none
+	}
 }
