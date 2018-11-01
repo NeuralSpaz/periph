@@ -6,6 +6,7 @@ package physic
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"testing"
 	"time"
@@ -534,5 +535,36 @@ func BenchmarkCelsiusFloatg(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		buf.WriteString(fmt.Sprintf("%g°C", v))
 		buf.Reset()
+	}
+}
+
+func TestAngle_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Angle
+	}{
+		{"Degrees", "1Degrees", Degree},
+		{"nRadians", "1nRadians", NanoRadian},
+		{"uRadians", "1uRadians", MicroRadian},
+		{"mRadians", "1mRadians", MilliRadian},
+		{"Radians", "1Radians", Radian},
+		{"ThetaRadians", "1ThetaRadians", Theta},
+		{"PiRadians", "1PiRadians", Pi},
+		{"Pi", "1Pi", Pi},
+		{"Theta", "1Theta", Theta},
+		{"1", "1", Radian},
+		{"123.456789Radians", "123.456789Radians", 123456789 * MicroRadian},
+		// {"2Pi/Theta", "1Theta", 2 * Pi}, I guess there is a difference :P
+	}
+
+	for _, tt := range tests {
+		var got Angle
+		fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+		fs.Var(&got, "angle", "value of angle")
+		fs.Parse([]string{"-angle", tt.s})
+		if got != tt.want {
+			t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+		}
 	}
 }
