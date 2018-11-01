@@ -804,6 +804,255 @@ func TestElectricCurrent_Set(t *testing.T) {
 	}
 }
 
+func TestTemperature_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Temperature
+	}{
+
+		{"1nK", "1nK", 1 * NanoKelvin},
+		{"10nK", "10nK", 10 * NanoKelvin},
+		{"100nK", "100nK", 100 * NanoKelvin},
+		{"1uK", "1uK", 1 * MicroKelvin},
+		{"10uK", "10uK", 10 * MicroKelvin},
+		{"100uK", "100uK", 100 * MicroKelvin},
+		{"1µK", "1µK", 1 * MicroKelvin},
+		{"10µK", "10µK", 10 * MicroKelvin},
+		{"100µK", "100µK", 100 * MicroKelvin},
+		{"1mK", "1mK", 1 * MilliKelvin},
+		{"10mK", "10mK", 10 * MilliKelvin},
+		{"100mK", "100mK", 100 * MilliKelvin},
+		{"1K", "1K", 1 * Kelvin},
+		{"10K", "10K", 10 * Kelvin},
+		{"100K", "100K", 100 * Kelvin},
+		{"1kK", "1kK", 1 * KiloKelvin},
+		{"10kK", "10kK", 10 * KiloKelvin},
+		{"100kK", "100kK", 100 * KiloKelvin},
+		{"1MK", "1MK", 1 * MegaKelvin},
+		{"10MK", "10MK", 10 * MegaKelvin},
+		{"100MK", "100MK", 100 * MegaKelvin},
+		{"1GK", "1GK", 1 * GigaKelvin},
+		{"0C", "0C", ZeroCelsius},
+		{"0°C", "0°C", ZeroCelsius},
+		{"20C", "20C", ZeroCelsius + 20*Kelvin},
+		{"-20C", "-20C", ZeroCelsius - 20*Kelvin},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Temperature
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "t", "value of temperature")
+			fs.Parse([]string{"-t", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestElectricPotential_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want ElectricPotential
+	}{
+
+		{"1nV", "1nV", 1 * NanoVolt},
+		{"10nV", "10nV", 10 * NanoVolt},
+		{"100nV", "100nV", 100 * NanoVolt},
+		{"1uV", "1uV", 1 * MicroVolt},
+		{"10uV", "10uV", 10 * MicroVolt},
+		{"100uV", "100uV", 100 * MicroVolt},
+		{"1µV", "1µV", 1 * MicroVolt},
+		{"10µV", "10µV", 10 * MicroVolt},
+		{"100µV", "100µV", 100 * MicroVolt},
+		{"1mV", "1mV", 1 * MilliVolt},
+		{"10mV", "10mV", 10 * MilliVolt},
+		{"100mV", "100mV", 100 * MilliVolt},
+		{"1V", "1V", 1 * Volt},
+		{"10V", "10V", 10 * Volt},
+		{"100V", "100V", 100 * Volt},
+		{"1kV", "1kV", 1 * KiloVolt},
+		{"10kV", "10kV", 10 * KiloVolt},
+		{"100kV", "100kV", 100 * KiloVolt},
+		{"1MV", "1MV", 1 * MegaVolt},
+		{"10MV", "10MV", 10 * MegaVolt},
+		{"100MV", "100MV", 100 * MegaVolt},
+		{"1GV", "1GV", 1 * GigaVolt},
+		{"volt", "volt", 1 * Volt},
+		{"volts", "volts", 1 * Volt},
+		{"Volt", "Volt", 1 * Volt},
+		{"Volts", "Volts", 1 * Volt},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got ElectricPotential
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "v", "value of voltage")
+			fs.Parse([]string{"-v", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestElectricResistance_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want ElectricResistance
+	}{
+
+		{"1nΩ", "1nΩ", 1 * NanoOhm},
+		{"10nΩ", "10nΩ", 10 * NanoOhm},
+		{"100nΩ", "100nΩ", 100 * NanoOhm},
+		{"1uΩ", "1uΩ", 1 * MicroOhm},
+		{"10uΩ", "10uΩ", 10 * MicroOhm},
+		{"100uΩ", "100uΩ", 100 * MicroOhm},
+		{"1µΩ", "1µΩ", 1 * MicroOhm},
+		{"10µΩ", "10µΩ", 10 * MicroOhm},
+		{"100µΩ", "100µΩ", 100 * MicroOhm},
+		{"1mΩ", "1mΩ", 1 * MilliOhm},
+		{"10mΩ", "10mΩ", 10 * MilliOhm},
+		{"100mΩ", "100mΩ", 100 * MilliOhm},
+		{"1Ω", "1Ω", 1 * Ohm},
+		{"10Ω", "10Ω", 10 * Ohm},
+		{"100Ω", "100Ω", 100 * Ohm},
+		{"1kΩ", "1kΩ", 1 * KiloOhm},
+		{"10kΩ", "10kΩ", 10 * KiloOhm},
+		{"100kΩ", "100kΩ", 100 * KiloOhm},
+		{"1MΩ", "1MΩ", 1 * MegaOhm},
+		{"10MΩ", "10MΩ", 10 * MegaOhm},
+		{"100MΩ", "100MΩ", 100 * MegaOhm},
+		{"1GΩ", "1GΩ", 1 * GigaOhm},
+		{"Ohm", "Ohm", 1 * Ohm},
+		{"Ohms", "Ohms", 1 * Ohm},
+		{"ohm", "ohm", 1 * Ohm},
+		{"ohms", "ohms", 1 * Ohm},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got ElectricResistance
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "r", "value of resistance")
+			fs.Parse([]string{"-r", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestPower_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Power
+	}{
+
+		{"1nW", "1nW", 1 * NanoWatt},
+		{"10nW", "10nW", 10 * NanoWatt},
+		{"100nW", "100nW", 100 * NanoWatt},
+		{"1uW", "1uW", 1 * MicroWatt},
+		{"10uW", "10uW", 10 * MicroWatt},
+		{"100uW", "100uW", 100 * MicroWatt},
+		{"1µW", "1µW", 1 * MicroWatt},
+		{"10µW", "10µW", 10 * MicroWatt},
+		{"100µW", "100µW", 100 * MicroWatt},
+		{"1mW", "1mW", 1 * MilliWatt},
+		{"10mW", "10mW", 10 * MilliWatt},
+		{"100mW", "100mW", 100 * MilliWatt},
+		{"1W", "1W", 1 * Watt},
+		{"10W", "10W", 10 * Watt},
+		{"100W", "100W", 100 * Watt},
+		{"1kW", "1kW", 1 * KiloWatt},
+		{"10kW", "10kW", 10 * KiloWatt},
+		{"100kW", "100kW", 100 * KiloWatt},
+		{"1MW", "1MW", 1 * MegaWatt},
+		{"10MW", "10MW", 10 * MegaWatt},
+		{"100MW", "100MW", 100 * MegaWatt},
+		{"1GW", "1GW", 1 * GigaWatt},
+		{"Watt", "Watt", 1 * Watt},
+		{"Watts", "Watts", 1 * Watt},
+		{"Watt", "Watt", 1 * Watt},
+		{"Watts", "Watts", 1 * Watt},
+		{"W", "W", 1 * Watt},
+		{"w", "w", 1 * Watt},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Power
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "p", "value of power")
+			fs.Parse([]string{"-p", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestEnergy_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Energy
+	}{
+
+		{"1nJ", "1nJ", 1 * NanoJoule},
+		{"10nJ", "10nJ", 10 * NanoJoule},
+		{"100nJ", "100nJ", 100 * NanoJoule},
+		{"1uJ", "1uJ", 1 * MicroJoule},
+		{"10uJ", "10uJ", 10 * MicroJoule},
+		{"100uJ", "100uJ", 100 * MicroJoule},
+		{"1µJ", "1µJ", 1 * MicroJoule},
+		{"10µJ", "10µJ", 10 * MicroJoule},
+		{"100µJ", "100µJ", 100 * MicroJoule},
+		{"1mJ", "1mJ", 1 * MilliJoule},
+		{"10mJ", "10mJ", 10 * MilliJoule},
+		{"100mJ", "100mJ", 100 * MilliJoule},
+		{"1J", "1J", 1 * Joule},
+		{"10J", "10J", 10 * Joule},
+		{"100J", "100J", 100 * Joule},
+		{"1kJ", "1kJ", 1 * KiloJoule},
+		{"10kJ", "10kJ", 10 * KiloJoule},
+		{"100kJ", "100kJ", 100 * KiloJoule},
+		{"1MJ", "1MJ", 1 * MegaJoule},
+		{"10MJ", "10MJ", 10 * MegaJoule},
+		{"100MJ", "100MJ", 100 * MegaJoule},
+		{"1GJ", "1GJ", 1 * GigaJoule},
+		{"Joule", "Joule", 1 * Joule},
+		{"Joules", "Joules", 1 * Joule},
+		{"joule", "joule", 1 * Joule},
+		{"joules", "joules", 1 * Joule},
+		{"J", "J", 1 * Joule},
+		{"j", "j", 1 * Joule},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Energy
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "e", "value of energy")
+			fs.Parse([]string{"-e", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
 func TestMeta_Set(t *testing.T) {
 	var degree Angle
 	var metre Distance
@@ -851,8 +1100,8 @@ func TestMeta_Set(t *testing.T) {
 		{"Angle", &degree, "1", false},
 		{"Distance", &metre, "1", false},
 		{"ElectricCurrent", &amp, "1", false},
-		// {"ElectricPotential", &volt, "1", false},
-		// {"ElectricResistance", &ohm, "1", false},
+		{"ElectricPotential", &volt, "1", false},
+		{"ElectricResistance", &ohm, "1", false},
 		{"ElectricalCapacitance", &farad, "1", false},
 		// {"Force", &newton, "1", false},
 		{"Frequency", &hertz, "1", false},
@@ -860,9 +1109,9 @@ func TestMeta_Set(t *testing.T) {
 		// {"Pressure", &pascal, "1", false},
 		// {"RelativeHumidity", &humidity, "1", false},
 		// {"Speed", &metresPerSecond, "1", false},
-		// {"Temperature", &celsius, "1", false},
-		// {"Power", &watt, "1", false},
-		// {"Energy", &joule, "1", false},
+		{"Temperature", &celsius, "1", false},
+		{"Power", &watt, "1", false},
+		{"Energy", &joule, "1", false},
 		// {"LuminousIntensity", &candela, "1", false},
 		// {"LuminousFlux", &lux, "1", false},
 	}
