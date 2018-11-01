@@ -705,3 +705,126 @@ func TestParseFrequency(t *testing.T) {
 		})
 	}
 }
+
+func TestElectricalCapacitance_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want ElectricalCapacitance
+	}{
+
+		{"1pF", "1pF", 1 * PicoFarad},
+		{"10pF", "10pF", 10 * PicoFarad},
+		{"100pF", "100pF", 100 * PicoFarad},
+		{"1nF", "1nF", 1 * NanoFarad},
+		{"10nF", "10nF", 10 * NanoFarad},
+		{"100nF", "100nF", 100 * NanoFarad},
+		{"1uF", "1uF", 1 * MicroFarad},
+		{"10uF", "10uF", 10 * MicroFarad},
+		{"100uF", "100uF", 100 * MicroFarad},
+		{"1µF", "1µF", 1 * MicroFarad},
+		{"10µF", "10µF", 10 * MicroFarad},
+		{"100µF", "100µF", 100 * MicroFarad},
+		{"1mF", "1mF", 1 * MilliFarad},
+		{"10mF", "10mF", 10 * MilliFarad},
+		{"100mF", "100mF", 100 * MilliFarad},
+		{"1F", "1F", 1 * Farad},
+		{"10F", "10F", 10 * Farad},
+		{"100F", "100F", 100 * Farad},
+		{"1kF", "1kF", 1 * KiloFarad},
+		{"10kF", "10kF", 10 * KiloFarad},
+		{"100kF", "100kF", 100 * KiloFarad},
+		{"1f", "1f", 1 * Farad},
+		{"1farad", "1farad", 1 * Farad},
+		{"1Farad", "1Farad", 1 * Farad},
+		{"10farads", "10farads", 10 * Farad},
+		{"10Farads", "10Farads", 10 * Farad},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got ElectricalCapacitance
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "farad", "value of capacitance")
+			fs.Parse([]string{"-farad", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestMeta_Set(t *testing.T) {
+	var degree Angle
+	var metre Distance
+	var amp ElectricCurrent
+	var volt ElectricPotential
+	var ohm ElectricResistance
+	var farad ElectricalCapacitance
+	var newton Force
+	var hertz Frequency
+	var gram Mass
+	var pascal Pressure
+	var humidity RelativeHumidity
+	var metresPerSecond Speed
+	var celsius Temperature
+	var watt Power
+	var joule Energy
+	var candela LuminousIntensity
+	var lux LuminousFlux
+
+	tests := []struct {
+		name    string
+		v       flag.Value
+		s       string
+		wantErr bool
+	}{
+		{"errAngle", &degree, "1.1.1.1", true},
+		{"errDistance", &metre, "1.1.1.1", true},
+		{"errElectricCurrent", &amp, "1.1.1.1", true},
+		{"errElectricPotential", &volt, "1.1.1.1", true},
+		{"errElectricResistance", &ohm, "1.1.1.1", true},
+		{"errElectricalCapacitance", &farad, "1.1.1.1", true},
+		{"errForce", &newton, "1.1.1.1", true},
+		{"errFrequency", &hertz, "1.1.1.1", true},
+		{"errMass", &gram, "1.1.1.1", true},
+		{"errPressure", &pascal, "1.1.1.1", true},
+		{"errRelativeHumidity", &humidity, "1.1.1.1", true},
+		{"errSpeed", &metresPerSecond, "1.1.1.1", true},
+		{"errTemperature", &celsius, "1.1.1.1", true},
+		{"errPower", &watt, "1.1.1.1", true},
+		{"errEnergy", &joule, "1.1.1.1", true},
+		{"errLuminousIntensity", &candela, "1.1.1.1", true},
+		{"errLuminousFlux", &lux, "1.1.1.1", true},
+		{"errAngle", &degree, "1.1.1.1", true},
+		//Mininmal Implementation un-comment for WIP.
+		{"Angle", &degree, "1", false},
+		{"Distance", &metre, "1", false},
+		// {"ElectricCurrent", &amp, "1", false},
+		// {"ElectricPotential", &volt, "1", false},
+		// {"ElectricResistance", &ohm, "1", false},
+		{"ElectricalCapacitance", &farad, "1", false},
+		// {"Force", &newton, "1", false},
+		{"Frequency", &hertz, "1", false},
+		// {"Mass", &gram, "1", false},
+		// {"Pressure", &pascal, "1", false},
+		// {"RelativeHumidity", &humidity, "1", false},
+		// {"Speed", &metresPerSecond, "1", false},
+		// {"Temperature", &celsius, "1", false},
+		// {"Power", &watt, "1", false},
+		// {"Energy", &joule, "1", false},
+		// {"LuminousIntensity", &candela, "1", false},
+		// {"LuminousFlux", &lux, "1", false},
+	}
+
+	for _, tt := range tests {
+		got := tt.v.Set(tt.s)
+		if tt.wantErr && got == nil {
+			t.Errorf("%s expected error but got none", tt.name)
+		}
+		if !tt.wantErr && got != nil {
+			t.Errorf("%s got unexpected error%v", tt.name, got)
+		}
+	}
+}

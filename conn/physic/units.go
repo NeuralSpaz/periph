@@ -145,7 +145,6 @@ func (d *Distance) Set(s string) error {
 	prefix := prefix(none)
 	if !(n == len(r)) {
 		prefix = parseSIPrefix(r[n])
-		// fmt.Println(len(r[n:]))
 		if prefix == milli && !(len(r[n:]) == 2) {
 			// Catch case when m* get interpreted as milli.
 			prefix = none
@@ -161,12 +160,10 @@ func (d *Distance) Set(s string) error {
 	}
 	scale := math.Pow10(int(prefix) - distanceBase)
 	if prefix != none {
-		r = r[n+1:]
+		s = string(r[n+1:])
 	} else {
-		r = r[n:]
+		s = string(r[n:])
 	}
-	s = string(r)
-	// fmt.Printf("scale %v value %v prefix %v s %s", scale, v, prefix, s)
 	switch s {
 	case "yard", "Yard", "yards", "Yards":
 		*d = (Distance)(int64(scale * v * float64(Yard) / float64(Metre)))
@@ -177,7 +174,6 @@ func (d *Distance) Set(s string) error {
 	case "m", "metre", "meters":
 		fallthrough
 	default:
-		// fmt.Printf("scale %v value %v prefix %v s %s", scale, v, prefix, s)
 		*d = (Distance)(int64(scale * v * float64(NanoMetre)))
 	}
 	return nil
@@ -463,7 +459,7 @@ func (s Speed) String() string {
 }
 
 // Set takes a string and tries to return a valid Speed.
-func (s Speed) Set(str string) error { return nil }
+func (s Speed) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	// MetrePerSecond is m/s.
@@ -494,7 +490,7 @@ func (t Temperature) String() string {
 }
 
 // Set takes a string and tries to return a valid Temperature.
-func (t Temperature) Set(str string) error { return nil }
+func (t Temperature) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	NanoKelvin  Temperature = 1
@@ -524,7 +520,7 @@ func (p Power) String() string {
 }
 
 // Set takes a string and tries to return a valid Power.
-func (p Power) Set(str string) error { return nil }
+func (p Power) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	// Watt is unit of power J/s, kg⋅m²⋅s⁻³
@@ -548,7 +544,7 @@ func (e Energy) String() string {
 }
 
 // Set takes a string and tries to return a valid Energy.
-func (e Energy) Set(str string) error { return nil }
+func (e Energy) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	// Joule is a unit of work. kg⋅m²⋅s⁻²
@@ -572,7 +568,34 @@ func (c ElectricalCapacitance) String() string {
 }
 
 // Set takes a string and tries to return a valid ElectricalCapacitance.
-func (e ElectricalCapacitance) Set(str string) error { return nil }
+func (e *ElectricalCapacitance) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+		if prefix == femto {
+			// Catch case when f* etc get interpreted as femto.
+			prefix = none
+		}
+	}
+	scale := math.Pow10(int(prefix) - int(pico))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "f", "farad", "farads", "F", "Farad", "Farads":
+		fallthrough
+	default:
+		*e = (ElectricalCapacitance)(int64(scale * v * float64(PicoFarad)))
+	}
+	return nil
+}
 
 const (
 	// Farad is a unit of capacitance. kg⁻¹⋅m⁻²⋅s⁴A²
@@ -603,7 +626,7 @@ func (l LuminousIntensity) String() string {
 }
 
 // Set takes a string and tries to return a valid LuminousIntensity.
-func (l LuminousIntensity) Set(str string) error { return nil }
+func (l LuminousIntensity) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	// Candela is a unit of luminous intensity. cd
@@ -632,7 +655,7 @@ func (f LuminousFlux) String() string {
 }
 
 // Set takes a string and tries to return a valid LuminousFlux.
-func (l LuminousFlux) Set(str string) error { return nil }
+func (l LuminousFlux) Set(str string) error { return errors.New("not implemented") }
 
 const (
 	// Lumen is a unit of luminous flux. cd⋅sr
@@ -947,8 +970,6 @@ func parseSIPrefix(r rune) prefix {
 		return micro
 	case 'm':
 		return milli
-	case 'h':
-		return hecto
 	case 'k':
 		return kilo
 	case 'M':
