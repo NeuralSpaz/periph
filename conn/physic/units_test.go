@@ -751,6 +751,55 @@ func TestElectricalCapacitance_Set(t *testing.T) {
 				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
 			}
 		})
+	}
+}
+
+func TestElectricCurrent_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want ElectricCurrent
+	}{
+
+		{"1nA", "1nA", 1 * NanoAmpere},
+		{"10nA", "10nA", 10 * NanoAmpere},
+		{"100nA", "100nA", 100 * NanoAmpere},
+		{"1uA", "1uA", 1 * MicroAmpere},
+		{"10uA", "10uA", 10 * MicroAmpere},
+		{"100uA", "100uA", 100 * MicroAmpere},
+		{"1µA", "1µA", 1 * MicroAmpere},
+		{"10µA", "10µA", 10 * MicroAmpere},
+		{"100µA", "100µA", 100 * MicroAmpere},
+		{"1mA", "1mA", 1 * MilliAmpere},
+		{"10mA", "10mA", 10 * MilliAmpere},
+		{"100mA", "100mA", 100 * MilliAmpere},
+		{"1A", "1A", 1 * Ampere},
+		{"10A", "10A", 10 * Ampere},
+		{"100A", "100A", 100 * Ampere},
+		{"1kA", "1kA", 1 * KiloAmpere},
+		{"10kA", "10kA", 10 * KiloAmpere},
+		{"100kA", "100kA", 100 * KiloAmpere},
+		{"1MA", "1MA", 1 * MegaAmpere},
+		{"10MA", "10MA", 10 * MegaAmpere},
+		{"100MA", "100MA", 100 * MegaAmpere},
+		{"1GA", "1GA", 1 * GigaAmpere},
+		{"1a", "1a", 1 * Ampere},
+		{"1Amp", "1Amp", 1 * Ampere},
+		{"1amp", "1amp", 1 * Ampere},
+		{"1amps", "1amps", 1 * Ampere},
+		{"1Amps", "1Amps", 1 * Ampere},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got ElectricCurrent
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "amps", "value of current")
+			fs.Parse([]string{"-amps", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
 
 	}
 }
@@ -801,7 +850,7 @@ func TestMeta_Set(t *testing.T) {
 		//Mininmal Implementation un-comment for WIP.
 		{"Angle", &degree, "1", false},
 		{"Distance", &metre, "1", false},
-		// {"ElectricCurrent", &amp, "1", false},
+		{"ElectricCurrent", &amp, "1", false},
 		// {"ElectricPotential", &volt, "1", false},
 		// {"ElectricResistance", &ohm, "1", false},
 		{"ElectricalCapacitance", &farad, "1", false},
