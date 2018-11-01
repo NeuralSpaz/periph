@@ -1204,6 +1204,55 @@ func TestLuminousFlux_Set(t *testing.T) {
 	}
 }
 
+func TestSpeed_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Speed
+	}{
+
+		{"1nm/s", "1nm/s", 1 * NanoMetrePerSecond},
+		{"10nm/s", "10nm/s", 10 * NanoMetrePerSecond},
+		{"100nm/s", "100nm/s", 100 * NanoMetrePerSecond},
+		{"1um/s", "1um/s", 1 * MicroMetrePerSecond},
+		{"10um/s", "10um/s", 10 * MicroMetrePerSecond},
+		{"100um/s", "100um/s", 100 * MicroMetrePerSecond},
+		{"1µm/s", "1µm/s", 1 * MicroMetrePerSecond},
+		{"10µm/s", "10µm/s", 10 * MicroMetrePerSecond},
+		{"100µm/s", "100µm/s", 100 * MicroMetrePerSecond},
+		{"1mm/s", "1mm/s", 1 * MilliMetrePerSecond},
+		{"10mm/s", "10mm/s", 10 * MilliMetrePerSecond},
+		{"100mm/s", "100mm/s", 100 * MilliMetrePerSecond},
+		{"1m/s", "1m/s", 1 * MetrePerSecond},
+		{"10m/s", "10m/s", 10 * MetrePerSecond},
+		{"100m/s", "100m/s", 100 * MetrePerSecond},
+		{"1km/s", "1km/s", 1 * KiloMetrePerSecond},
+		{"10km/s", "10km/s", 10 * KiloMetrePerSecond},
+		{"100km/s", "100km/s", 100 * KiloMetrePerSecond},
+		{"1Mm/s", "1Mm/s", 1 * MegaMetrePerSecond},
+		{"10Mm/s", "10Mm/s", 10 * MegaMetrePerSecond},
+		{"100Mm/s", "100Mm/s", 100 * MegaMetrePerSecond},
+		{"1Glm", "1Glm", 1 * GigaMetrePerSecond},
+		{"m/s", "m/s", 1 * MetrePerSecond},
+		{"km/h", "km/h", 1 * KilometrePerHour},
+		{"mph", "mph", 1 * MilePerHour},
+		{"fps", "fps", 1 * FootPerSecond},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Speed
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "s", "value of speed")
+			fs.Parse([]string{"-s", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
 func TestMeta_Set(t *testing.T) {
 	var degree Angle
 	var metre Distance
@@ -1259,7 +1308,7 @@ func TestMeta_Set(t *testing.T) {
 		// {"Mass", &gram, "1", false},
 		{"Pressure", &pascal, "1", false},
 		// {"RelativeHumidity", &humidity, "1", false},
-		// {"Speed", &metresPerSecond, "1", false},
+		{"Speed", &metresPerSecond, "1", false},
 		{"Temperature", &celsius, "1", false},
 		{"Power", &watt, "1", false},
 		{"Energy", &joule, "1", false},

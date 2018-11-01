@@ -549,7 +549,45 @@ func (s Speed) String() string {
 }
 
 // Set takes a string and tries to return a valid Speed.
-func (s Speed) Set(str string) error { return errors.New("not implemented") }
+func (s *Speed) Set(str string) error {
+	r := []rune(str)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+		if prefix == milli && !(string(r[n:]) == "mm/s") {
+			prefix = none
+		}
+		if prefix == kilo && !(string(r[n:]) == "km/s") {
+			prefix = none
+		}
+		if prefix == femto {
+			prefix = none
+		}
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		str = string(r[n+1:])
+	} else {
+		str = string(r[n:])
+	}
+	switch str {
+	case "fps":
+		*s = (Speed)(int64(scale * v * float64(FootPerSecond) / float64(MetrePerSecond)))
+	case "mph":
+		*s = (Speed)(int64(scale * v * float64(MilePerHour) / float64(MetrePerSecond)))
+	case "km/h":
+		*s = (Speed)(int64(scale * v * float64(KilometrePerHour) / float64(MetrePerSecond)))
+	case "m/s":
+		fallthrough
+	default:
+		*s = (Speed)(int64(scale * v * float64(NanoMetrePerSecond)))
+	}
+	return nil
+}
 
 const (
 	// MetrePerSecond is m/s.
@@ -559,6 +597,7 @@ const (
 	MetrePerSecond      Speed = 1000 * MilliMetrePerSecond
 	KiloMetrePerSecond  Speed = 1000 * MetrePerSecond
 	MegaMetrePerSecond  Speed = 1000 * KiloMetrePerSecond
+	GigaMetrePerSecond  Speed = 1000 * MegaMetrePerSecond
 
 	LightSpeed Speed = 299792458 * MetrePerSecond
 
