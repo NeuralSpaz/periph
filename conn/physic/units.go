@@ -5,7 +5,7 @@
 package physic
 
 import (
-	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -333,7 +333,34 @@ func (f Force) String() string {
 }
 
 // Set takes a string and tries to return a valid Force.
-func (f Force) Set(s string) error { return errors.New("not implemented") }
+func (f *Force) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(s)) {
+		prefix = parseSIPrefix(r[n])
+		if prefix == nano && !(string(r[n:]) == "nN") {
+			prefix = none
+		}
+
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "N":
+		fallthrough
+	default:
+		*f = (Force)(int64(scale * v * float64(NanoNewton)))
+	}
+	return nil
+}
 
 const (
 	// Newton is kg⋅m/s².
@@ -343,6 +370,7 @@ const (
 	Newton      Force = 1000 * MilliNewton
 	KiloNewton  Force = 1000 * Newton
 	MegaNewton  Force = 1000 * KiloNewton
+	GigaNewton  Force = 1000 * MegaNewton
 
 	EarthGravity Force = 9806650 * MicroNewton
 
@@ -435,7 +463,40 @@ func (m Mass) String() string {
 }
 
 // Set takes a string and tries to return a valid Mass.
-func (m Mass) Set(s string) error { return errors.New("not implemented") }
+func (m *Mass) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+		if prefix == giga && !(string(r[n:]) == "Gg") {
+			prefix = none
+		}
+		if prefix == tera && !(string(r[n:]) == "Tg") {
+			prefix = none
+		}
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "tonne", "Tonne", "tonnes", "Tonnes":
+		*m = (Mass)(int64(scale * v * float64(Tonne) / float64(Gram)))
+	case "ounce", "Ounce", "ounces", "Ounces":
+		*m = (Mass)(int64(scale * v * float64(OunceMass) / float64(Gram)))
+	case "g", "gram", "grams", "Gram", "Grams":
+		fallthrough
+	default:
+		*m = (Mass)(int64(scale * v * float64(NanoGram)))
+	}
+	return nil
+}
 
 const (
 	NanoGram  Mass = 1
@@ -444,6 +505,7 @@ const (
 	Gram      Mass = 1000 * MilliGram
 	KiloGram  Mass = 1000 * Gram
 	MegaGram  Mass = 1000 * KiloGram
+	GigaGram  Mass = 1000 * MegaGram
 	Tonne     Mass = MegaGram
 
 	// Conversion between Gram and imperial units.
@@ -528,7 +590,33 @@ func (r RelativeHumidity) String() string {
 }
 
 // Set takes a string and tries to return a valid RelativeHumidity.
-func (r RelativeHumidity) Set(s string) error { return errors.New("not implemented") }
+func (rh *RelativeHumidity) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(s)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - micro - 1))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	fmt.Println(v, prefix, scale, s)
+	switch s {
+	case "rH":
+		*rh = (RelativeHumidity)(int64(scale * v * float64(TenthMicroRH) * 100))
+	case "%rH":
+		fallthrough
+	default:
+		*rh = (RelativeHumidity)(int64(scale * v * float64(TenthMicroRH)))
+	}
+	return nil
+}
 
 const (
 	TenthMicroRH RelativeHumidity = 1                 // 0.00001%rH
