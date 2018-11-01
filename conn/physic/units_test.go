@@ -624,6 +624,65 @@ func TestFrequency_Set(t *testing.T) {
 	}
 }
 
+func TestDistance_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Distance
+	}{
+		{"1um", "1um", 1 * MicroMetre},
+		{"10um", "10um", 10 * MicroMetre},
+		{"100um", "100um", 100 * MicroMetre},
+		{"1µm", "1µm", 1 * MicroMetre},
+		{"10µm", "10µm", 10 * MicroMetre},
+		{"100µm", "100µm", 100 * MicroMetre},
+		{"1mm", "1mm", 1 * MilliMetre},
+		{"10mm", "10mm", 10 * MilliMetre},
+		{"100mm", "100mm", 100 * MilliMetre},
+		{"1m", "1m", 1 * Metre},
+		{"10m", "10m", 10 * Metre},
+		{"100m", "100m", 100 * Metre},
+		{"1km", "1km", 1 * KiloMetre},
+		{"10km", "10km", 10 * KiloMetre},
+		{"100km", "100km", 100 * KiloMetre},
+		{"1Mm", "1Mm", 1 * MegaMetre},
+		{"10Mm", "10Mm", 10 * MegaMetre},
+		{"100Mm", "100Mm", 100 * MegaMetre},
+		{"1Gm", "1Gm", 1 * GigaMetre},
+		{"metre", "metre", 1 * Metre},
+		{"Metre", "Metre", 1 * Metre},
+		{"metres", "10metres", 10 * Metre},
+		{"Metres", "10Metres", 10 * Metre},
+		{"in", "in", 1 * Inch},
+		{"In", "In", 1 * Inch},
+		{"inch", "inch", 1 * Inch},
+		{"Inch", "Inch", 1 * Inch},
+		{"inches", "inches", 1 * Inch},
+		{"Inches", "Inches", 1 * Inch},
+		{"foot", "foot", 1 * Foot},
+		{"Foot", "Foot", 1 * Foot},
+		{"ft", "ft", 1 * Foot},
+		{"Ft", "Ft", 1 * Foot},
+		{"Feet", "10Feet", 10 * Foot},
+		{"feet", "10feet", 10 * Foot},
+		{"Yard", "Yard", 1 * Yard},
+		{"yard", "yard", 1 * Yard},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Distance
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "d", "value of angle")
+			fs.Parse([]string{"-d", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
 func TestParseFrequency(t *testing.T) {
 	tests := []struct {
 		name    string

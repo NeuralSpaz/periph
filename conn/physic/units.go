@@ -74,27 +74,25 @@ func (a *Angle) Set(s string) error {
 	const (
 		angleBase int = nano
 	)
-	v, n, err := parseNumber(s)
+	r := []rune(s)
+	v, n, err := parseNumber(r)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
 	scale := math.Pow10(int(prefix) - angleBase)
-
-	if !(n == len(s)) {
-		prefix = parseSIPrefix([]rune(s)[n])
-		scale = math.Pow10(int(prefix) - angleBase)
-	}
 	if prefix != none {
-		s = s[n+1:]
+		r = r[n+1:]
 	} else {
-		s = s[n:]
+		r = r[n:]
 	}
+	s = string(r)
 	switch s {
-	case "°":
-		fallthrough
-	case "Degrees":
-		*a = (Angle)(int64((scale * v) / float64(Radian) * float64(Degree)))
+	case "°", "Degrees":
+		*a = (Angle)(int64(scale * v * float64(Degree) / float64(Radian)))
 	case "Radians":
 		*a = (Angle)(int64(scale * v))
 	case "Pi":
@@ -124,6 +122,7 @@ const (
 	Metre      Distance = 1000 * MilliMetre
 	KiloMetre  Distance = 1000 * Metre
 	MegaMetre  Distance = 1000 * KiloMetre
+	GigaMetre  Distance = 1000 * MegaMetre
 
 	// Conversion between Metre and imperial units.
 	Thou Distance = 25400 * NanoMetre
@@ -134,7 +133,55 @@ const (
 )
 
 // Set takes a string and tries to return a valid Distance.
-func (d Distance) Set(s string) error { return errors.New("not implemented") }
+func (d *Distance) Set(s string) error {
+	const (
+		distanceBase int = nano
+	)
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+		// fmt.Println(len(r[n:]))
+		if prefix == milli && !(len(r[n:]) == 2) {
+			// Catch case when m* get interpreted as milli.
+			prefix = none
+		}
+		if prefix == femto {
+			// Catch case when ft etc get interpreted as femto.
+			prefix = none
+		}
+		if prefix == mega && !(len(r[n:]) == 2) {
+			// Catch case when Meter/s get interpreted as mega.
+			prefix = none
+		}
+	}
+	scale := math.Pow10(int(prefix) - distanceBase)
+	if prefix != none {
+		r = r[n+1:]
+	} else {
+		r = r[n:]
+	}
+	s = string(r)
+	// fmt.Printf("scale %v value %v prefix %v s %s", scale, v, prefix, s)
+	switch s {
+	case "yard", "Yard", "yards", "Yards":
+		*d = (Distance)(int64(scale * v * float64(Yard) / float64(Metre)))
+	case "foot", "Foot", "Feet", "feet", "ft", "Ft":
+		*d = (Distance)(int64(scale * v * float64(Foot) / float64(Metre)))
+	case "in", "In", "inch", "Inch", "inches", "Inches":
+		*d = (Distance)(int64(scale * v * float64(Inch) / float64(Metre)))
+	case "m", "metre", "meters":
+		fallthrough
+	default:
+		// fmt.Printf("scale %v value %v prefix %v s %s", scale, v, prefix, s)
+		*d = (Distance)(int64(scale * v * float64(NanoMetre)))
+	}
+	return nil
+}
 
 // ElectricCurrent is a measurement of a flow of electric charge stored as an
 // int64 nano Ampere.
@@ -258,21 +305,23 @@ func (f *Frequency) Set(s string) error {
 	const (
 		freqBase int = micro
 	)
-	v, n, err := parseNumber(s)
+	r := []rune(s)
+	v, n, err := parseNumber(r)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
-	scale := math.Pow10(int(prefix) - freqBase)
 	if !(n == len(s)) {
-		prefix = parseSIPrefix([]rune(s)[n])
-		scale = math.Pow10(int(prefix) - freqBase)
+		prefix = parseSIPrefix(r[n])
+
 	}
+	scale := math.Pow10(int(prefix) - freqBase)
 	if prefix != none {
-		s = s[n+1:]
+		r = r[n+1:]
 	} else {
-		s = s[n:]
+		r = r[n:]
 	}
+	s = string(r)
 	switch s {
 	case "Hz":
 		fallthrough
@@ -843,22 +892,24 @@ func picoAsString(v int64) string {
 	return sign + strconv.Itoa(base) + "." + prefixZeros(3, frac) + unit
 }
 
-func parseNumber(s string) (float64, int, error) {
+func parseNumber(r []rune) (float64, int, error) {
 	n := 0
-	for i := n + 1; i < len(s); i++ {
+	for i := 0; i < len(r); i++ {
 		switch {
-		case rune(s[n]) == '-':
+		case r[i] == '-':
 			fallthrough
-		case unicode.IsDigit(rune(s[i])):
+		case unicode.IsDigit(r[i]):
 			fallthrough
-		case rune(s[i]) == '.':
+		case r[i] == '.':
 			n++
 		default:
 			break
 		}
 	}
-	n++
-	value, err := strconv.ParseFloat(s[:n], 64)
+	if n == 0 {
+		return 1, 0, nil
+	}
+	value, err := strconv.ParseFloat(string(r[:n]), 64)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -868,6 +919,7 @@ func parseNumber(s string) (float64, int, error) {
 type prefix int
 
 const (
+	femto prefix = -15
 	pico  prefix = -12
 	nano         = -9
 	micro        = -6
@@ -883,6 +935,8 @@ const (
 
 func parseSIPrefix(r rune) prefix {
 	switch r {
+	case 'f':
+		return femto
 	case 'p':
 		return pico
 	case 'n':
@@ -893,6 +947,8 @@ func parseSIPrefix(r rune) prefix {
 		return micro
 	case 'm':
 		return milli
+	case 'h':
+		return hecto
 	case 'k':
 		return kilo
 	case 'M':
