@@ -469,7 +469,33 @@ func (p Pressure) String() string {
 }
 
 // Set takes a string and tries to return a valid Pressure.
-func (p Pressure) Set(s string) error { return errors.New("not implemented") }
+func (p *Pressure) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+		if prefix == pico {
+			prefix = none
+		}
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "Pa", "pa", "Pascal", "pascal", "Pascals", "pascals":
+		fallthrough
+	default:
+		*p = (Pressure)(int64(scale * v * float64(NanoPascal)))
+	}
+	return nil
+}
 
 const (
 	// Pascal is N/m², kg/m/s².
@@ -764,7 +790,30 @@ func (l LuminousIntensity) String() string {
 }
 
 // Set takes a string and tries to return a valid LuminousIntensity.
-func (l LuminousIntensity) Set(str string) error { return errors.New("not implemented") }
+func (l *LuminousIntensity) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "cd", "Candela", "candela", "Candelas", "candelas":
+		fallthrough
+	default:
+		*l = (LuminousIntensity)(int64(scale * v * float64(NanoCandela)))
+	}
+	return nil
+}
 
 const (
 	// Candela is a unit of luminous intensity. cd
@@ -793,7 +842,30 @@ func (f LuminousFlux) String() string {
 }
 
 // Set takes a string and tries to return a valid LuminousFlux.
-func (l LuminousFlux) Set(str string) error { return errors.New("not implemented") }
+func (l *LuminousFlux) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix - nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "lm", "Lumen", "lumen", "Lumens", "lumens":
+		fallthrough
+	default:
+		*l = (LuminousFlux)(int64(scale * v * float64(NanoLumen)))
+	}
+	return nil
+}
 
 const (
 	// Lumen is a unit of luminous flux. cd⋅sr

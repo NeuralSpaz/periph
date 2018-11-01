@@ -1053,6 +1053,157 @@ func TestEnergy_Set(t *testing.T) {
 	}
 }
 
+func TestPressure(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Pressure
+	}{
+
+		{"1nPa", "1nPa", 1 * NanoPascal},
+		{"10nPa", "10nPa", 10 * NanoPascal},
+		{"100nPa", "100nPa", 100 * NanoPascal},
+		{"1uPa", "1uPa", 1 * MicroPascal},
+		{"10uPa", "10uPa", 10 * MicroPascal},
+		{"100uPa", "100uPa", 100 * MicroPascal},
+		{"1µPa", "1µPa", 1 * MicroPascal},
+		{"10µPa", "10µPa", 10 * MicroPascal},
+		{"100µPa", "100µPa", 100 * MicroPascal},
+		{"1mPa", "1mPa", 1 * MilliPascal},
+		{"10mPa", "10mPa", 10 * MilliPascal},
+		{"100mPa", "100mPa", 100 * MilliPascal},
+		{"1Pa", "1Pa", 1 * Pascal},
+		{"10Pa", "10Pa", 10 * Pascal},
+		{"100Pa", "100Pa", 100 * Pascal},
+		{"1kPa", "1kPa", 1 * KiloPascal},
+		{"10kPa", "10kPa", 10 * KiloPascal},
+		{"100kPa", "100kPa", 100 * KiloPascal},
+		{"1MPa", "1MPa", 1 * MegaPascal},
+		{"10MPa", "10MPa", 10 * MegaPascal},
+		{"100MPa", "100MPa", 100 * MegaPascal},
+		{"1GPa", "1GPa", 1 * GigaPascal},
+		{"Pascal", "Pascal", 1 * Pascal},
+		{"Pascals", "Pascals", 1 * Pascal},
+		{"pascal", "pascal", 1 * Pascal},
+		{"pascals", "pascals", 1 * Pascal},
+		{"Pa", "Pa", 1 * Pascal},
+		{"pa", "pa", 1 * Pascal},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Pressure
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "p", "value of presure")
+			fs.Parse([]string{"-p", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestLuminousIntensity_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want LuminousIntensity
+	}{
+
+		{"1ncd", "1ncd", 1 * NanoCandela},
+		{"10ncd", "10ncd", 10 * NanoCandela},
+		{"100ncd", "100ncd", 100 * NanoCandela},
+		{"1ucd", "1ucd", 1 * MicroCandela},
+		{"10ucd", "10ucd", 10 * MicroCandela},
+		{"100ucd", "100ucd", 100 * MicroCandela},
+		{"1µcd", "1µcd", 1 * MicroCandela},
+		{"10µcd", "10µcd", 10 * MicroCandela},
+		{"100µcd", "100µcd", 100 * MicroCandela},
+		{"1mcd", "1mcd", 1 * MilliCandela},
+		{"10mcd", "10mcd", 10 * MilliCandela},
+		{"100mcd", "100mcd", 100 * MilliCandela},
+		{"1cd", "1cd", 1 * Candela},
+		{"10cd", "10cd", 10 * Candela},
+		{"100cd", "100cd", 100 * Candela},
+		{"1kcd", "1kcd", 1 * KiloCandela},
+		{"10kcd", "10kcd", 10 * KiloCandela},
+		{"100kcd", "100kcd", 100 * KiloCandela},
+		{"1Mcd", "1Mcd", 1 * MegaCandela},
+		{"10Mcd", "10Mcd", 10 * MegaCandela},
+		{"100Mcd", "100Mcd", 100 * MegaCandela},
+		{"1Gcd", "1Gcd", 1 * GigaCandela},
+		{"Candela", "Candela", 1 * Candela},
+		{"Candelas", "Candelas", 1 * Candela},
+		{"candela", "candela", 1 * Candela},
+		{"candelas", "candelas", 1 * Candela},
+		{"cd", "cd", 1 * Candela},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got LuminousIntensity
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "l", "value of intensity")
+			fs.Parse([]string{"-l", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestLuminousFlux_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want LuminousFlux
+	}{
+
+		{"1nlm", "1nlm", 1 * NanoLumen},
+		{"10nlm", "10nlm", 10 * NanoLumen},
+		{"100nlm", "100nlm", 100 * NanoLumen},
+		{"1ulm", "1ulm", 1 * MicroLumen},
+		{"10ulm", "10ulm", 10 * MicroLumen},
+		{"100ulm", "100ulm", 100 * MicroLumen},
+		{"1µlm", "1µlm", 1 * MicroLumen},
+		{"10µlm", "10µlm", 10 * MicroLumen},
+		{"100µlm", "100µlm", 100 * MicroLumen},
+		{"1mlm", "1mlm", 1 * MilliLumen},
+		{"10mlm", "10mlm", 10 * MilliLumen},
+		{"100mlm", "100mlm", 100 * MilliLumen},
+		{"1lm", "1lm", 1 * Lumen},
+		{"10lm", "10lm", 10 * Lumen},
+		{"100lm", "100lm", 100 * Lumen},
+		{"1klm", "1klm", 1 * KiloLumen},
+		{"10klm", "10klm", 10 * KiloLumen},
+		{"100klm", "100klm", 100 * KiloLumen},
+		{"1Mlm", "1Mlm", 1 * MegaLumen},
+		{"10Mlm", "10Mlm", 10 * MegaLumen},
+		{"100Mlm", "100Mlm", 100 * MegaLumen},
+		{"1Glm", "1Glm", 1 * GigaLumen},
+		{"Lumen", "Lumen", 1 * Lumen},
+		{"Lumens", "Lumens", 1 * Lumen},
+		{"lumen", "lumen", 1 * Lumen},
+		{"lumens", "lumens", 1 * Lumen},
+		{"lm", "lm", 1 * Lumen},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got LuminousFlux
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "f", "value of flux")
+			fs.Parse([]string{"-f", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
 func TestMeta_Set(t *testing.T) {
 	var degree Angle
 	var metre Distance
@@ -1106,14 +1257,14 @@ func TestMeta_Set(t *testing.T) {
 		// {"Force", &newton, "1", false},
 		{"Frequency", &hertz, "1", false},
 		// {"Mass", &gram, "1", false},
-		// {"Pressure", &pascal, "1", false},
+		{"Pressure", &pascal, "1", false},
 		// {"RelativeHumidity", &humidity, "1", false},
 		// {"Speed", &metresPerSecond, "1", false},
 		{"Temperature", &celsius, "1", false},
 		{"Power", &watt, "1", false},
 		{"Energy", &joule, "1", false},
-		// {"LuminousIntensity", &candela, "1", false},
-		// {"LuminousFlux", &lux, "1", false},
+		{"LuminousIntensity", &candela, "1", false},
+		{"LuminousFlux", &lux, "1", false},
 	}
 
 	for _, tt := range tests {
