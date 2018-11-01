@@ -193,13 +193,39 @@ func (e ElectricCurrent) String() string {
 }
 
 // Set takes a string and tries to return a valid ElectricCurrent.
-func (e ElectricCurrent) Set(s string) error { return errors.New("not implemented") }
+func (e *ElectricCurrent) Set(s string) error {
+	r := []rune(s)
+	v, n, err := parseNumber(r)
+	if err != nil {
+		return err
+	}
+	prefix := prefix(none)
+	if !(n == len(r)) {
+		prefix = parseSIPrefix(r[n])
+	}
+	scale := math.Pow10(int(prefix) - int(nano))
+	if prefix != none {
+		s = string(r[n+1:])
+	} else {
+		s = string(r[n:])
+	}
+	switch s {
+	case "A", "a", "amp", "amps", "Amp", "Amps":
+		fallthrough
+	default:
+		*e = (ElectricCurrent)(int64(scale * v * float64(PicoFarad)))
+	}
+	return nil
+}
 
 const (
 	NanoAmpere  ElectricCurrent = 1
 	MicroAmpere ElectricCurrent = 1000 * NanoAmpere
 	MilliAmpere ElectricCurrent = 1000 * MicroAmpere
 	Ampere      ElectricCurrent = 1000 * MilliAmpere
+	KiloAmpere  ElectricCurrent = 1000 * Ampere
+	MegaAmpere  ElectricCurrent = 1000 * KiloAmpere
+	GigaAmpere  ElectricCurrent = 1000 * MegaAmpere
 )
 
 // ElectricPotential is a measurement of electric potential stored as an int64
