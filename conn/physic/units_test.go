@@ -545,26 +545,104 @@ func TestAngle_Set(t *testing.T) {
 		want Angle
 	}{
 		{"Degrees", "1Degrees", Degree},
+		{"Degrees", "-1Degrees", -1 * Degree},
+		{"Degrees", "180.00Degrees", 180 * Degree},
+		{"Degrees", "0.5Degrees", 8726646 * NanoRadian},
+		{"Degrees", "0.5°", 8726646 * NanoRadian},
 		{"nRadians", "1nRadians", NanoRadian},
 		{"uRadians", "1uRadians", MicroRadian},
 		{"mRadians", "1mRadians", MilliRadian},
+		{"uRadians", "0.5uRadians", 500 * NanoRadian},
+		{"mRadians", "0.5mRadians", 500 * MicroRadian},
 		{"Radians", "1Radians", Radian},
-		{"ThetaRadians", "1ThetaRadians", Theta},
-		{"PiRadians", "1PiRadians", Pi},
 		{"Pi", "1Pi", Pi},
-		{"Theta", "1Theta", Theta},
-		{"1", "1", Radian},
-		{"123.456789Radians", "123.456789Radians", 123456789 * MicroRadian},
-		// {"2Pi/Theta", "1Theta", 2 * Pi}, I guess there is a difference :P
+		{"2Pi", "2Pi", 2 * Pi},
+		{"2Pi", "-2Pi", -2 * Pi},
+		{"0.5Pi", "0.5Pi", 1570796326 * NanoRadian},
+		{"200", "200", 200 * Radian},
+		{"200u", "200u", 200 * MicroRadian},
+		{"1", "1", 1 * Radian},
 	}
 
 	for _, tt := range tests {
-		var got Angle
-		fs := flag.NewFlagSet("Tests", flag.ExitOnError)
-		fs.Var(&got, "angle", "value of angle")
-		fs.Parse([]string{"-angle", tt.s})
-		if got != tt.want {
-			t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			var got Angle
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "angle", "value of angle")
+			fs.Parse([]string{"-angle", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestFrequency_Set(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want Frequency
+	}{
+		{"1uHz", "1uHz", 1 * MicroHertz},
+		{"10uHz", "10uHz", 10 * MicroHertz},
+		{"100uHz", "100uHz", 100 * MicroHertz},
+		{"1µHz", "1µHz", 1 * MicroHertz},
+		{"10µHz", "10µHz", 10 * MicroHertz},
+		{"100µHz", "100µHz", 100 * MicroHertz},
+		{"1mHz", "1mHz", 1 * MilliHertz},
+		{"10mHz", "10mHz", 10 * MilliHertz},
+		{"100mHz", "100mHz", 100 * MilliHertz},
+		{"1Hz", "1Hz", 1 * Hertz},
+		{"10Hz", "10Hz", 10 * Hertz},
+		{"100Hz", "100Hz", 100 * Hertz},
+		{"1kHz", "1kHz", 1 * KiloHertz},
+		{"10kHz", "10kHz", 10 * KiloHertz},
+		{"100kHz", "100kHz", 100 * KiloHertz},
+		{"1MHz", "1MHz", 1 * MegaHertz},
+		{"10MHz", "10MHz", 10 * MegaHertz},
+		{"100MHz", "100MHz", 100 * MegaHertz},
+		{"1GHz", "1GHz", 1 * GigaHertz},
+		{"10GHz", "10GHz", 10 * GigaHertz},
+		{"100GHz", "100GHz", 100 * GigaHertz},
+		{"1THz", "1THz", 1 * TeraHertz},
+		{"12.345Hz", "12.345Hz", 12345 * MilliHertz},
+		{"-12.345Hz", "-12.345Hz", -12345 * MilliHertz},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got Frequency
+			fs := flag.NewFlagSet("Tests", flag.ExitOnError)
+			fs.Var(&got, "f", "value of angle")
+			fs.Parse([]string{"-f", tt.s})
+			if got != tt.want {
+				t.Errorf("%s wanted: %v but got: %v(%d)", tt.name, tt.want, got, got)
+			}
+		})
+
+	}
+}
+
+func TestParseFrequency(t *testing.T) {
+	tests := []struct {
+		name    string
+		s       string
+		want    Frequency
+		wantErr bool
+	}{
+		{"100µHz", "100µHz", 100 * MicroHertz, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseFrequency(tt.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ParseFrequency() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ParseFrequency() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
