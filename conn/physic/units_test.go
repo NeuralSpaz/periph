@@ -980,12 +980,14 @@ func TestPower_Set(t *testing.T) {
 		{"10MW", "10MW", 10 * MegaWatt},
 		{"100MW", "100MW", 100 * MegaWatt},
 		{"1GW", "1GW", 1 * GigaWatt},
-		{"Watt", "Watt", 1 * Watt},
-		{"Watts", "Watts", 1 * Watt},
-		{"Watt", "Watt", 1 * Watt},
-		{"Watts", "Watts", 1 * Watt},
-		{"W", "W", 1 * Watt},
-		{"w", "w", 1 * Watt},
+		{"10Watt", "10Watt", 10 * Watt},
+		{"10Watts", "10Watts", 10 * Watt},
+		{"10Watt", "10Watt", 10 * Watt},
+		{"10Watts", "10Watts", 10 * Watt},
+		{"10W", "10W", 10 * Watt},
+		{"10w", "10w", 10 * Watt},
+		{"12.23w", "12.23w", 12230 * MilliWatt},
+		{"12.23µw", "12.23uw", 12230 * NanoWatt},
 	}
 
 	for _, tt := range tests {
@@ -1462,4 +1464,132 @@ func TestMeta_Set(t *testing.T) {
 			t.Errorf("%s got unexpected error%v", tt.name, got)
 		}
 	}
+}
+
+func BenchmarkSetDistanceFloat(b *testing.B) {
+	var t Temperature
+	// buf := bytes.Buffer{}
+	for i := 0; i < b.N; i++ {
+		t.Set("-337.2m")
+	}
+}
+
+func BenchmarkSetPowerInt(b *testing.B) {
+	var t Power
+	// buf := bytes.Buffer{}
+	for i := 0; i < b.N; i++ {
+		t.Set("-337.2w")
+	}
+}
+
+func BenchmarkDecimal(b *testing.B) {
+	var d decimal
+	// buf := bytes.Buffer{}
+	for i := 0; i < b.N; i++ {
+		d.set("-337.2m")
+	}
+}
+
+func BenchmarkDecimalInt(b *testing.B) {
+	var d decimal
+	// buf := bytes.Buffer{}
+	// var i64 int64
+	for i := 0; i < b.N; i++ {
+		d.set("-337.2m")
+		d.getInt(0)
+	}
+}
+
+func TestDecimal_Set(t *testing.T) {
+	const (
+		negative = true
+		postive  = false
+	)
+	tests := []struct {
+		s    string
+		want decimal
+		used int
+		err  bool
+	}{
+		{"123456789", decimal{"123456789", 0, postive}, 9, false},
+		{"1nM", decimal{"1", 0, postive}, 1, false},
+		{"2.2nM", decimal{"22", -1, postive}, 3, false},
+		{"12.5mA", decimal{"125", -1, postive}, 4, false},
+		{"-12.5mA", decimal{"125", -1, negative}, 5, false},
+		{"1.1.1", decimal{}, 0, true},
+		{"1ma1", decimal{"1", 0, postive}, 1, false},
+		{"-0.00001%rH", decimal{"1", -5, negative}, 8, false},
+		{"0.00001%rH", decimal{"1", -5, postive}, 7, false},
+		{"--1ma1", decimal{"1", 0, negative}, 3, false},
+		{"++100ma1", decimal{"1", 2, postive}, 5, false},
+		{"1.0", decimal{"1", 0, postive}, 3, false},
+		{"0.10001", decimal{"10001", -5, postive}, 7, false},
+		{"-0.10001", decimal{"10001", -5, negative}, 8, false},
+		{"%-0.10001", decimal{"10001", -5, negative}, 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.s, func(t *testing.T) {
+			got := decimal{}
+			n, err := got.set(tt.s)
+
+			if got != tt.want && !tt.err {
+				t.Errorf("got %v expected %v", got, tt.want)
+			}
+			if tt.err && err == nil {
+				t.Errorf("expected error %v but got nil", err)
+			}
+
+			if n != tt.used {
+				t.Errorf("expected to consume %d char but used %d", tt.used, n)
+			}
+
+		})
+
+	}
+}
+
+func TestDecimal_getInt(t *testing.T) {
+	tests := []struct {
+		name string
+		d    decimal
+		want int64
+		err  bool
+	}{
+		{"123", decimal{"123", 0, false}, 123, false},
+		{"-123", decimal{"123", 0, true}, -123, false},
+		{"1230", decimal{"123", 1, false}, 1230, false},
+		{"-1230", decimal{"123", 1, true}, -1230, false},
+		{"1230", decimal{"123", 20, false}, 1230, true},
+		{"-1230", decimal{"123", 20, true}, -1230, true},
+		{"10000000000000000000", decimal{"10000000000000000000", 0, false}, 123, true},
+		{"10000000000000000000", decimal{"10000000000000000000", 0, true}, -123, true},
+		{"1a", decimal{"1a", 0, false}, 123, true},
+		{"2.7b", decimal{"2.7b", 0, true}, -123, true},
+		{"12", decimal{"123", -1, false}, 12, false},
+		{"-12", decimal{"123", -1, true}, -12, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.d.getInt(0)
+
+			if got != tt.want && !tt.err {
+				t.Errorf("got %v expected %v", got, tt.want)
+			}
+			if tt.err && err == nil {
+				t.Errorf("expected error %v but got nil", err)
+			}
+		})
+	}
+
+}
+
+func TestMatch(t *testing.T) {
+	test := []string{"mm", "metre"}
+
+	fmt.Println(match("m", test))
+	fmt.Println(match("metre", test))
+	fmt.Println(match("metre", []string{"k"}))
+
 }

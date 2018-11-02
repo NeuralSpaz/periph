@@ -5,8 +5,10 @@
 package physic
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"time"
 	"unicode"
@@ -78,7 +80,7 @@ func (a *Angle) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -137,7 +139,7 @@ func (d *Distance) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == milli && !(len(r[n:]) == 2) {
 			// Catch case when m* get interpreted as milli.
 			prefix = none
@@ -194,7 +196,7 @@ func (e *ElectricCurrent) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -241,7 +243,7 @@ func (e *ElectricPotential) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -289,7 +291,7 @@ func (e *ElectricResistance) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -341,7 +343,7 @@ func (f *Force) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(s)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == nano && !(string(r[n:]) == "nN") {
 			prefix = none
 		}
@@ -401,7 +403,7 @@ func (f *Frequency) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(s)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 
 	}
 	scale := math.Pow10(int(prefix - micro))
@@ -471,7 +473,7 @@ func (m *Mass) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == giga && !(string(r[n:]) == "Gg") {
 			prefix = none
 		}
@@ -539,7 +541,7 @@ func (p *Pressure) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == pico {
 			prefix = none
 		}
@@ -598,7 +600,7 @@ func (rh *RelativeHumidity) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(s)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - micro - 1))
 	if prefix != none {
@@ -645,7 +647,7 @@ func (s *Speed) Set(str string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == milli && !(string(r[n:]) == "mm/s") {
 			prefix = none
 		}
@@ -715,7 +717,7 @@ func (t *Temperature) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -766,26 +768,24 @@ func (p Power) String() string {
 
 // Set takes a string and tries to return a valid Power.
 func (p *Power) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	var d decimal
+	n, err := d.set(s)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+	if !(n == len(s)) {
+		prefix, _ = parseSIPrefix([]rune(s[n:])[0])
 	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
+	v, err := d.getInt(int(prefix - nano))
+	if err != nil {
+		return err
 	}
-	switch s {
+	switch s[n:] {
 	case "watt", "watts", "Watt", "Watts", "W", "w":
 		fallthrough
 	default:
-		*p = (Power)(int64(scale * v * float64(NanoWatt)))
+		*p = (Power)(v)
 	}
 	return nil
 }
@@ -820,7 +820,7 @@ func (e *Energy) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -867,7 +867,7 @@ func (e *ElectricalCapacitance) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 		if prefix == femto {
 			// Catch case when f* etc get interpreted as femto.
 			prefix = none
@@ -925,7 +925,7 @@ func (l *LuminousIntensity) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -977,7 +977,7 @@ func (l *LuminousFlux) Set(s string) error {
 	}
 	prefix := prefix(none)
 	if !(n == len(r)) {
-		prefix = parseSIPrefix(r[n])
+		prefix, _ = parseSIPrefix(r[n])
 	}
 	scale := math.Pow10(int(prefix - nano))
 	if prefix != none {
@@ -1269,6 +1269,7 @@ func parseNumber(r []rune) (float64, int, error) {
 	if n == 0 {
 		return 1, 0, nil
 	}
+
 	value, err := strconv.ParseFloat(string(r[:n]), 64)
 	if err != nil {
 		return 0, 0, err
@@ -1276,46 +1277,234 @@ func parseNumber(r []rune) (float64, int, error) {
 	return value, n, err
 }
 
+// match matches on longes token
+func match(s string, tokens []string) string {
+	sort.Strings(tokens)
+	for _, token := range tokens {
+		if len(s) >= len(token) && s[0:len(token)] == token {
+			return token
+		}
+	}
+	return "error no match"
+}
+
+type decimal struct {
+	digits string
+	exp    int
+	neg    bool
+}
+
+var powerOF10 = []int64{
+	1,
+	10,
+	100,
+	1000,
+	10000,
+	100000,
+	1000000,
+	10000000,
+	100000000,
+	1000000000,
+	10000000000,
+	100000000000,
+	1000000000000,
+	10000000000000,
+	100000000000000,
+	1000000000000000,
+	10000000000000000,
+	100000000000000000,
+	1000000000000000000,
+}
+
+func (d *decimal) getInt(scale int) (int64, error) {
+	const max = (1<<63 - 1) / 10
+	var n int64
+	for _, c := range []byte(d.digits) {
+		if c >= '0' && c <= '9' {
+			digit := c - '0'
+			n *= 10
+			next := n + int64(digit)
+			if next < n || next > max {
+				return next, &parseError{err: errors.New("not a number")}
+			}
+			n = next
+		} else {
+			return 0, &parseError{err: errors.New("not a number")}
+		}
+	}
+	if d.neg {
+		n *= -1
+	}
+	exp := d.exp + scale
+
+	if exp < 0 {
+		exp = d.exp * -1
+	}
+	if exp > 18 {
+		return 0, errors.New("overflows")
+	}
+	if d.exp+scale < 0 {
+		n /= powerOF10[exp]
+	} else {
+		n *= powerOF10[exp]
+	}
+	return n, nil
+}
+
+func (d *decimal) set(s string) (int, error) {
+	start := 0
+	dp := 0
+	end := 0
+	seenDigit := false
+	isPoint := false
+	var last int
+	for i := 0; i < len(s); i++ {
+		switch {
+		case s[i] == '-':
+			d.neg = true
+			start++
+		case s[i] == '+':
+			start++
+		case s[i] == '.':
+			if isPoint {
+				return 0, &parseError{s, i, errors.New("multiple decimal points")}
+			}
+			isPoint = true
+			dp = i
+			if !seenDigit {
+				start++
+			}
+		case s[i] == '0':
+			if !seenDigit {
+				start++
+			}
+		case s[i] >= '1' && s[i] <= '9':
+			seenDigit = true
+		default:
+			if !seenDigit {
+				return 0, &parseError{s, i, errors.New("does start with as number")}
+			}
+			end = i
+			break
+		}
+	}
+
+	if end == 0 {
+		end = len(s)
+	}
+	seenDigit = false
+	exp := 0
+	for i := end - 1; i >= start; i-- {
+		switch {
+		case s[i] >= '1' && s[i] <= '9':
+			seenDigit = true
+		case s[i] == '.':
+			if !seenDigit {
+				end--
+			}
+		case s[i] == '0':
+			if !seenDigit {
+				if i > dp {
+					end--
+				}
+				if i <= dp || dp == 0 {
+					exp++
+				}
+			}
+		default:
+			if !seenDigit {
+				end--
+				last = i
+			}
+		}
+	}
+
+	if dp > start && dp < end {
+		//Concatenate with out decimal point
+		d.digits = s[start:dp] + s[dp+1:end]
+	} else {
+		d.digits = s[start:end]
+	}
+	if !isPoint {
+		d.exp = exp
+	} else {
+		ttl := dp - start
+		length := len(d.digits)
+		if ttl > 0 {
+			d.exp = ttl - length
+		} else {
+			d.exp = ttl - length + 1
+		}
+	}
+
+	if last == 0 {
+		last = len(s)
+	}
+	return last, nil
+}
+
+type prefixError struct {
+	prefix string
+	err    error
+}
+
+func (s *prefixError) Error() string {
+	if s.err == nil {
+		return fmt.Sprintf("prefix %s does not match with any supported SI standard prefixes: f,n,p,u,m,h,k,M,G,T", s.prefix)
+	}
+	return fmt.Sprintf("prefix %s error %v:", s.prefix, s.err)
+}
+
+type parseError struct {
+	s        string
+	position int
+	err      error
+}
+
+func (p *parseError) Error() string {
+	return fmt.Sprintf("parse error near pos %d in %s :%v", p.position, p.s, p.err)
+}
+
 type prefix int
 
 const (
 	femto prefix = -15
 	pico  prefix = -12
-	nano         = -9
-	micro        = -6
-	milli        = -3
-	none         = 0
-	deca         = 1
-	hecto        = 2
-	kilo         = 3
-	mega         = 6
-	giga         = 9
-	tera         = 12
+	nano  prefix = -9
+	micro prefix = -6
+	milli prefix = -3
+	none  prefix = 0
+	deca  prefix = 1
+	hecto prefix = 2
+	kilo  prefix = 3
+	mega  prefix = 6
+	giga  prefix = 9
+	tera  prefix = 12
 )
 
-func parseSIPrefix(r rune) prefix {
+func parseSIPrefix(r rune) (prefix, error) {
 	switch r {
 	case 'f':
-		return femto
+		return femto, nil
 	case 'p':
-		return pico
+		return pico, nil
 	case 'n':
-		return nano
+		return nano, nil
 	case 'u':
-		return micro
+		return micro, nil
 	case 'µ':
-		return micro
+		return micro, nil
 	case 'm':
-		return milli
+		return milli, nil
 	case 'k':
-		return kilo
+		return kilo, nil
 	case 'M':
-		return mega
+		return mega, nil
 	case 'G':
-		return giga
+		return giga, nil
 	case 'T':
-		return tera
+		return tera, nil
 	default:
-		return none
+		return none, nil
 	}
 }
