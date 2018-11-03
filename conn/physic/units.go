@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"sort"
 	"strconv"
 	"time"
 	"unicode"
@@ -73,30 +72,19 @@ const (
 
 // Set takes a string and tries to return a valid Angle.
 func (a *Angle) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
-	case "°", "Degrees":
-		*a = (Angle)(int64(scale * v * float64(Degree) / float64(Radian)))
-	case "Radians":
-		*a = (Angle)(int64(scale * v))
-	case "Pi":
-		*a = (Angle)(int64(v * float64(Pi)))
+	switch s[n:] {
+	case "°", "Degrees", "degrees":
+		*a = (Angle)(v * int64(Degree) / int64(Radian))
+	case "Pi", "pi", "π":
+		*a = (Angle)(v * int64(Pi) / int64(Radian))
+	case "Radians", "radians":
+		fallthrough
 	default:
-		*a = (Angle)(int64(scale * v * float64(NanoRadian)))
+		*a = (Angle)(v)
 	}
 	return nil
 }
@@ -144,10 +132,6 @@ func (d *Distance) Set(s string) error {
 			// Catch case when m* get interpreted as milli.
 			prefix = none
 		}
-		if prefix == femto {
-			// Catch case when ft etc get interpreted as femto.
-			prefix = none
-		}
 		if prefix == mega && !(len(r[n:]) == 2) {
 			// Catch case when Meter/s get interpreted as mega.
 			prefix = none
@@ -189,26 +173,16 @@ func (e ElectricCurrent) String() string {
 
 // Set takes a string and tries to return a valid ElectricCurrent.
 func (e *ElectricCurrent) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "A", "a", "amp", "amps", "Amp", "Amps":
 		fallthrough
 	default:
-		*e = (ElectricCurrent)(int64(scale * v * float64(PicoFarad)))
+		*e = (ElectricCurrent)(v)
 	}
 	return nil
 }
@@ -236,26 +210,16 @@ func (e ElectricPotential) String() string {
 
 // Set takes a string and tries to return a valid ElectricPotential.
 func (e *ElectricPotential) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "V", "v", "volt", "Volt", "volts", "Volts":
 		fallthrough
 	default:
-		*e = (ElectricPotential)(int64(scale * v * float64(NanoVolt)))
+		*e = (ElectricPotential)(v)
 	}
 	return nil
 }
@@ -284,26 +248,16 @@ func (e ElectricResistance) String() string {
 
 // Set takes a string and tries to return a valid ElectricResistance.
 func (e *ElectricResistance) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "Ohm", "Ohms", "ohm", "ohms", "Ω":
 		fallthrough
 	default:
-		*e = (ElectricResistance)(int64(scale * v * float64(NanoOhm)))
+		*e = (ElectricResistance)(v)
 	}
 	return nil
 }
@@ -336,30 +290,32 @@ func (f Force) String() string {
 
 // Set takes a string and tries to return a valid Force.
 func (f *Force) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	var d decimal
+	n, err := d.set(s)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
 	if !(n == len(s)) {
-		prefix, _ = parseSIPrefix(r[n])
-		if prefix == nano && !(string(r[n:]) == "nN") {
+		var n1 int
+		prefix, n1 = parseSIPrefix([]rune(s[n:])[0])
+		if prefix == nano && !(s[n:] == "nN") {
 			prefix = none
 		}
+		if prefix != none {
+			n += n1
+		}
+	}
+	v, err := d.getInt(int(prefix - nano))
+	if err != nil {
+		return err
+	}
 
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
-	case "N":
-		fallthrough
+	switch s[n:] {
+	case "N", "Newton", "newton", "Newtons", "newtons":
+		*f = (Force)(v)
 	default:
-		*f = (Force)(int64(scale * v * float64(NanoNewton)))
+		return noUnits("N")
 	}
 	return nil
 }
@@ -396,27 +352,16 @@ func (f Frequency) String() string {
 // Set takes a string and tries to return a valid Frequency.
 
 func (f *Frequency) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, micro)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(s)) {
-		prefix, _ = parseSIPrefix(r[n])
 
-	}
-	scale := math.Pow10(int(prefix - micro))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
-	case "Hz":
-		fallthrough
+	switch s[n:] {
+	case "Hz", "hz":
+		*f = (Frequency)(v)
 	default:
-		*f = (Frequency)(int64(scale * v * float64(MicroHertz)))
+		return noUnits("Hz")
 	}
 	return nil
 }
@@ -466,36 +411,40 @@ func (m Mass) String() string {
 
 // Set takes a string and tries to return a valid Mass.
 func (m *Mass) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	var d decimal
+	n, err := d.set(s)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-		if prefix == giga && !(string(r[n:]) == "Gg") {
+	if !(n == len(s)) {
+		var n1 int
+		prefix, n1 = parseSIPrefix([]rune(s[n:])[0])
+		if prefix == giga && !(s[n:] == "Gg") {
 			prefix = none
 		}
-		if prefix == tera && !(string(r[n:]) == "Tg") {
+		if prefix == tera && !(s[n:] == "Tg") {
 			prefix = none
 		}
+		if prefix != none {
+			n += n1
+		}
 	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
+	v, err := d.getInt(int(prefix - nano))
+	if err != nil {
+		return err
 	}
-	switch s {
+	// fmt.Println(s, n, v)
+	// fmt.Println("into switch ", s[n:])
+	switch s[n:] {
 	case "tonne", "Tonne", "tonnes", "Tonnes":
-		*m = (Mass)(int64(scale * v * float64(Tonne) / float64(Gram)))
+		*m = (Mass)((v / int64(Gram) * int64(Tonne)))
 	case "ounce", "Ounce", "ounces", "Ounces":
-		*m = (Mass)(int64(scale * v * float64(OunceMass) / float64(Gram)))
+		*m = (Mass)((v / int64(Gram) * int64(OunceMass)))
 	case "g", "gram", "grams", "Gram", "Grams":
-		fallthrough
+		*m = (Mass)(v)
 	default:
-		*m = (Mass)(int64(scale * v * float64(NanoGram)))
+		return errors.New("no units given")
 	}
 	return nil
 }
@@ -534,29 +483,16 @@ func (p Pressure) String() string {
 
 // Set takes a string and tries to return a valid Pressure.
 func (p *Pressure) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-		if prefix == pico {
-			prefix = none
-		}
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "Pa", "pa", "Pascal", "pascal", "Pascals", "pascals":
 		fallthrough
 	default:
-		*p = (Pressure)(int64(scale * v * float64(NanoPascal)))
+		*p = (Pressure)(v)
 	}
 	return nil
 }
@@ -592,30 +528,19 @@ func (r RelativeHumidity) String() string {
 }
 
 // Set takes a string and tries to return a valid RelativeHumidity.
-func (rh *RelativeHumidity) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+func (r *RelativeHumidity) Set(s string) error {
+	v, n, err := setInt(s, prefix(-5))
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(s)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - micro - 1))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	fmt.Println(v, prefix, scale, s)
-	switch s {
-	case "rH":
-		*rh = (RelativeHumidity)(int64(scale * v * float64(TenthMicroRH) * 100))
-	case "%rH":
+
+	switch s[n:] {
+	case "rH", "rh":
+		*r = (RelativeHumidity)(v * 100)
+	case "%rH", "%rh":
 		fallthrough
 	default:
-		*rh = (RelativeHumidity)(int64(scale * v * float64(TenthMicroRH)))
+		*r = (RelativeHumidity)(v)
 	}
 	return nil
 }
@@ -639,42 +564,37 @@ func (s Speed) String() string {
 }
 
 // Set takes a string and tries to return a valid Speed.
-func (s *Speed) Set(str string) error {
-	r := []rune(str)
-	v, n, err := parseNumber(r)
+func (s *Speed) Set(ss string) error {
+	var d decimal
+	n, err := d.set(ss)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-		if prefix == milli && !(string(r[n:]) == "mm/s") {
+	if !(n == len(ss)) {
+		prefix, _ = parseSIPrefix([]rune(ss[n:])[0])
+		if prefix == milli && !(ss[n:] == "mm/s") {
 			prefix = none
 		}
-		if prefix == kilo && !(string(r[n:]) == "km/s") {
-			prefix = none
-		}
-		if prefix == femto {
+		if prefix == kilo && !(ss[n:] == "km/s") {
 			prefix = none
 		}
 	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		str = string(r[n+1:])
-	} else {
-		str = string(r[n:])
+	v, err := d.getInt(int(prefix - nano))
+	if err != nil {
+		return err
 	}
-	switch str {
+	switch ss[n:] {
 	case "fps":
-		*s = (Speed)(int64(scale * v * float64(FootPerSecond) / float64(MetrePerSecond)))
+		*s = (Speed)((v * int64(FootPerSecond) / int64(MetrePerSecond)))
 	case "mph":
-		*s = (Speed)(int64(scale * v * float64(MilePerHour) / float64(MetrePerSecond)))
+		*s = (Speed)((v * int64(MilePerHour) / int64(MetrePerSecond)))
 	case "km/h":
-		*s = (Speed)(int64(scale * v * float64(KilometrePerHour) / float64(MetrePerSecond)))
+		*s = (Speed)((v * int64(KilometrePerHour) / int64(MetrePerSecond)))
 	case "m/s":
 		fallthrough
 	default:
-		*s = (Speed)(int64(scale * v * float64(NanoMetrePerSecond)))
+		*s = (Speed)(v)
 	}
 	return nil
 }
@@ -710,28 +630,17 @@ func (t Temperature) String() string {
 
 // Set takes a string and tries to return a valid Temperature.
 func (t *Temperature) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+	switch s[n:] {
 	case "K":
-		*t = (Temperature)(int64(scale * v * float64(NanoKelvin)))
+		*t = (Temperature)(v * int64(NanoKelvin))
 	case "C", "°C":
-		fallthrough
+		*t = (Temperature)(v + int64(ZeroCelsius))
 	default:
-		*t = (Temperature)(int64(scale*v + float64(ZeroCelsius)))
+		*t = (Temperature)(v)
 	}
 	return nil
 }
@@ -768,19 +677,11 @@ func (p Power) String() string {
 
 // Set takes a string and tries to return a valid Power.
 func (p *Power) Set(s string) error {
-	var d decimal
-	n, err := d.set(s)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(s)) {
-		prefix, _ = parseSIPrefix([]rune(s[n:])[0])
-	}
-	v, err := d.getInt(int(prefix - nano))
-	if err != nil {
-		return err
-	}
+
 	switch s[n:] {
 	case "watt", "watts", "Watt", "Watts", "W", "w":
 		fallthrough
@@ -813,26 +714,16 @@ func (e Energy) String() string {
 
 // Set takes a string and tries to return a valid Energy.
 func (e *Energy) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "Joule", "Joules", "joule", "joules", "J", "j":
 		fallthrough
 	default:
-		*e = (Energy)(int64(scale * v * float64(NanoJoule)))
+		*e = (Energy)(v)
 	}
 	return nil
 }
@@ -860,30 +751,16 @@ func (c ElectricalCapacitance) String() string {
 
 // Set takes a string and tries to return a valid ElectricalCapacitance.
 func (e *ElectricalCapacitance) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, pico)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-		if prefix == femto {
-			// Catch case when f* etc get interpreted as femto.
-			prefix = none
-		}
-	}
-	scale := math.Pow10(int(prefix - pico))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "f", "farad", "farads", "F", "Farad", "Farads":
 		fallthrough
 	default:
-		*e = (ElectricalCapacitance)(int64(scale * v * float64(PicoFarad)))
+		*e = (ElectricalCapacitance)(v)
 	}
 	return nil
 }
@@ -918,26 +795,16 @@ func (l LuminousIntensity) String() string {
 
 // Set takes a string and tries to return a valid LuminousIntensity.
 func (l *LuminousIntensity) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "cd", "Candela", "candela", "Candelas", "candelas":
 		fallthrough
 	default:
-		*l = (LuminousIntensity)(int64(scale * v * float64(NanoCandela)))
+		*l = (LuminousIntensity)(v)
 	}
 	return nil
 }
@@ -970,26 +837,16 @@ func (f LuminousFlux) String() string {
 
 // Set takes a string and tries to return a valid LuminousFlux.
 func (l *LuminousFlux) Set(s string) error {
-	r := []rune(s)
-	v, n, err := parseNumber(r)
+	v, n, err := setInt(s, nano)
 	if err != nil {
 		return err
 	}
-	prefix := prefix(none)
-	if !(n == len(r)) {
-		prefix, _ = parseSIPrefix(r[n])
-	}
-	scale := math.Pow10(int(prefix - nano))
-	if prefix != none {
-		s = string(r[n+1:])
-	} else {
-		s = string(r[n:])
-	}
-	switch s {
+
+	switch s[n:] {
 	case "lm", "Lumen", "lumen", "Lumens", "lumens":
 		fallthrough
 	default:
-		*l = (LuminousFlux)(int64(scale * v * float64(NanoLumen)))
+		*l = (LuminousFlux)(v)
 	}
 	return nil
 }
@@ -1277,24 +1134,13 @@ func parseNumber(r []rune) (float64, int, error) {
 	return value, n, err
 }
 
-// match matches on longes token
-func match(s string, tokens []string) string {
-	sort.Strings(tokens)
-	for _, token := range tokens {
-		if len(s) >= len(token) && s[0:len(token)] == token {
-			return token
-		}
-	}
-	return "error no match"
-}
-
 type decimal struct {
 	digits string
 	exp    int
 	neg    bool
 }
 
-var powerOF10 = []int64{
+var powerOF10 = []uint64{
 	1,
 	10,
 	100,
@@ -1317,36 +1163,45 @@ var powerOF10 = []int64{
 }
 
 func (d *decimal) getInt(scale int) (int64, error) {
-	const max = (1<<63 - 1) / 10
-	var n int64
+	const max = (1<<63 - 1)
+	var u uint64
 	for _, c := range []byte(d.digits) {
 		if c >= '0' && c <= '9' {
 			digit := c - '0'
-			n *= 10
-			next := n + int64(digit)
-			if next < n || next > max {
-				return next, &parseError{err: errors.New("not a number")}
+			u *= 10
+			check := u + uint64(digit)
+			if check < u || check > max {
+				return int64(u), &parseError{err: errors.New("overflows")}
 			}
-			n = next
+			u = check
 		} else {
+			// Should really not get here and just for safety.
 			return 0, &parseError{err: errors.New("not a number")}
 		}
 	}
-	if d.neg {
-		n *= -1
-	}
+
 	exp := d.exp + scale
+	if exp > 18 {
+		return 0, errors.New("exceeds maximum exponent")
+	}
 
 	if exp < 0 {
 		exp = d.exp * -1
 	}
-	if exp > 18 {
-		return 0, errors.New("overflows")
-	}
+
 	if d.exp+scale < 0 {
-		n /= powerOF10[exp]
+		u /= powerOF10[exp]
 	} else {
-		n *= powerOF10[exp]
+		check := u * powerOF10[exp]
+		if check < u || check > max {
+			return max, &parseError{err: errors.New("overflows")}
+		}
+		u *= powerOF10[exp]
+	}
+
+	n := int64(u)
+	if d.neg {
+		n *= -1
 	}
 	return n, nil
 }
@@ -1356,8 +1211,10 @@ func (d *decimal) set(s string) (int, error) {
 	dp := 0
 	end := 0
 	seenDigit := false
+	seenZero := false
 	isPoint := false
-	var last int
+
+	// Strip leading zeros, +/- and mark DP.
 	for i := 0; i < len(s); i++ {
 		switch {
 		case s[i] == '-':
@@ -1378,11 +1235,12 @@ func (d *decimal) set(s string) (int, error) {
 			if !seenDigit {
 				start++
 			}
+			seenZero = true
 		case s[i] >= '1' && s[i] <= '9':
 			seenDigit = true
 		default:
-			if !seenDigit {
-				return 0, &parseError{s, i, errors.New("does start with as number")}
+			if !seenDigit && !seenZero {
+				return 0, &parseError{s: s, err: errors.New("is not a number")}
 			}
 			end = i
 			break
@@ -1392,9 +1250,11 @@ func (d *decimal) set(s string) (int, error) {
 	if end == 0 {
 		end = len(s)
 	}
+	last := end
 	seenDigit = false
 	exp := 0
-	for i := end - 1; i >= start; i-- {
+	// Strip non significant zeros.
+	for i := end - 1; i > start-1; i-- {
 		switch {
 		case s[i] >= '1' && s[i] <= '9':
 			seenDigit = true
@@ -1412,10 +1272,8 @@ func (d *decimal) set(s string) (int, error) {
 				}
 			}
 		default:
-			if !seenDigit {
-				end--
-				last = i
-			}
+			last--
+			end--
 		}
 	}
 
@@ -1436,11 +1294,28 @@ func (d *decimal) set(s string) (int, error) {
 			d.exp = ttl - length + 1
 		}
 	}
-
-	if last == 0 {
-		last = len(s)
-	}
 	return last, nil
+}
+
+func setInt(s string, base prefix) (int64, int, error) {
+	var d decimal
+	n, err := d.set(s)
+	if err != nil {
+		return 0, n, err
+	}
+	prefix := prefix(none)
+	if !(n == len(s)) {
+		var n1 int
+		prefix, n1 = parseSIPrefix([]rune(s[n:])[0])
+		if prefix != none {
+			n += n1
+		}
+	}
+	v, err := d.getInt(int(prefix - base))
+	if err != nil {
+		return v, 0, err
+	}
+	return v, n, nil
 }
 
 type prefixError struct {
@@ -1449,6 +1324,7 @@ type prefixError struct {
 }
 
 func (s *prefixError) Error() string {
+	// if s.int != 0 {}
 	if s.err == nil {
 		return fmt.Sprintf("prefix %s does not match with any supported SI standard prefixes: f,n,p,u,m,h,k,M,G,T", s.prefix)
 	}
@@ -1462,13 +1338,16 @@ type parseError struct {
 }
 
 func (p *parseError) Error() string {
-	return fmt.Sprintf("parse error near pos %d in %s :%v", p.position, p.s, p.err)
+	return fmt.Sprintf("parse error %s :%v", p.s, p.err)
+}
+
+func noUnits(s string) error {
+	return &parseError{s: s, err: errors.New("no units provided")}
 }
 
 type prefix int
 
 const (
-	femto prefix = -15
 	pico  prefix = -12
 	nano  prefix = -9
 	micro prefix = -6
@@ -1482,29 +1361,27 @@ const (
 	tera  prefix = 12
 )
 
-func parseSIPrefix(r rune) (prefix, error) {
+func parseSIPrefix(r rune) (prefix, int) {
 	switch r {
-	case 'f':
-		return femto, nil
 	case 'p':
-		return pico, nil
+		return pico, len(string(r))
 	case 'n':
-		return nano, nil
+		return nano, len(string(r))
 	case 'u':
-		return micro, nil
+		return micro, len(string(r))
 	case 'µ':
-		return micro, nil
+		return micro, len(string(r))
 	case 'm':
-		return milli, nil
+		return milli, len(string(r))
 	case 'k':
-		return kilo, nil
+		return kilo, len(string(r))
 	case 'M':
-		return mega, nil
+		return mega, len(string(r))
 	case 'G':
-		return giga, nil
+		return giga, len(string(r))
 	case 'T':
-		return tera, nil
+		return tera, len(string(r))
 	default:
-		return none, nil
+		return none, 0
 	}
 }
