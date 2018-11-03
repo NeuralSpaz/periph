@@ -544,31 +544,29 @@ func TestAngle_Set(t *testing.T) {
 		s    string
 		want Angle
 	}{
-		{"Degrees", "1Degrees", Degree},
-		{"Degrees", "-1Degrees", -1 * Degree},
-		{"Degrees", "180.00Degrees", 180 * Degree},
-		{"Degrees", "0.5Degrees", 8726646 * NanoRadian},
-		{"Degrees", "0.5°", 8726646 * NanoRadian},
-		{"nRadians", "1nRadians", NanoRadian},
-		{"uRadians", "1uRadians", MicroRadian},
-		{"mRadians", "1mRadians", MilliRadian},
-		{"uRadians", "0.5uRadians", 500 * NanoRadian},
-		{"mRadians", "0.5mRadians", 500 * MicroRadian},
+		{"1Degrees", "1Degrees", Degree},
+		{"-1Degrees", "-1Degrees", -1 * Degree},
+		{"180.00Degrees", "180.00Degrees", 180 * Degree},
+		{"0.5Degrees", "0.5Degrees", 8726646 * NanoRadian},
+		{"0.5°", "0.5°", 8726646 * NanoRadian},
+		{"1nRadians", "1nRadians", NanoRadian},
+		{"1uRadians", "1uRadians", MicroRadian},
+		{"1mRadians", "1mRadians", MilliRadian},
+		{"0.5uRadians", "0.5uRadians", 500 * NanoRadian},
+		{"0.5mRadians", "0.5mRadians", 500 * MicroRadian},
 		{"200uRadians", "200uRadians", 200 * MicroRadian},
-		{"Radians", "1Radians", Radian},
-		{"Pi", "1Pi", Pi},
-		{"π", "1π", Pi},
+		{"1Radians", "1Radians", Radian},
+		{"1Pi", "1Pi", Pi},
+		{"1π", "1π", Pi},
 		{"2Pi", "2Pi", 2 * Pi},
 		{"2Pi", "-2Pi", -2 * Pi},
 		{"0.5Pi", "0.5Pi", 1570796326 * NanoRadian},
-		{"200", "200", 200 * Radian},
-		{"200m", "200m", 200 * MilliRadian},
-		{"20.0m", "20.0m", 20 * MilliRadian},
+		{"200mRadians", "200mRadians", 200 * MilliRadian},
+		{"20.0mRadians", "20.0mRadians", 20 * MilliRadian},
 		{"1nRadian", "1nRadian", 1 * NanoRadian},
-		{"1n", "1n", 1 * NanoRadian},
-		{"1u", "1u", 1 * MicroRadian},
-		{"1m", "1m", 1 * MilliRadian},
-		{"1", "1", 1 * Radian},
+		{"1nradians", "1nradians", 1 * NanoRadian},
+		{"1uradians", "1uradians", 1 * MicroRadian},
+		{"1mradians", "1mradians", 1 * MilliRadian},
 	}
 
 	for _, tt := range tests {
@@ -657,24 +655,28 @@ func TestDistance_Set(t *testing.T) {
 		{"10Mm", "10Mm", 10 * MegaMetre},
 		{"100Mm", "100Mm", 100 * MegaMetre},
 		{"1Gm", "1Gm", 1 * GigaMetre},
-		{"metre", "metre", 1 * Metre},
-		{"Metre", "Metre", 1 * Metre},
-		{"metres", "10metres", 10 * Metre},
-		{"Metres", "10Metres", 10 * Metre},
-		{"in", "in", 1 * Inch},
-		{"In", "In", 1 * Inch},
-		{"inch", "inch", 1 * Inch},
-		{"Inch", "Inch", 1 * Inch},
-		{"inches", "inches", 1 * Inch},
-		{"Inches", "Inches", 1 * Inch},
-		{"foot", "foot", 1 * Foot},
-		{"Foot", "Foot", 1 * Foot},
-		{"ft", "ft", 1 * Foot},
-		{"Ft", "Ft", 1 * Foot},
-		{"Feet", "10Feet", 10 * Foot},
-		{"feet", "10feet", 10 * Foot},
-		{"Yard", "Yard", 1 * Yard},
-		{"yard", "yard", 1 * Yard},
+		{"1metre", "1metre", 1 * Metre},
+		{"1Metre", "1Metre", 1 * Metre},
+		{"10metres", "10metres", 10 * Metre},
+		{"10Metres", "10Metres", 10 * Metre},
+		{"1in", "1in", 1 * Inch},
+		{"1In", "1In", 1 * Inch},
+		{"1inch", "1inch", 1 * Inch},
+		{"1Inch", "1Inch", 1 * Inch},
+		{"1inches", "1inches", 1 * Inch},
+		{"1Inches", "1Inches", 1 * Inch},
+		{"1foot", "1foot", 1 * Foot},
+		{"1Foot", "1Foot", 1 * Foot},
+		{"1ft", "1ft", 1 * Foot},
+		{"1Ft", "1Ft", 1 * Foot},
+		{"10Feet", "10Feet", 10 * Foot},
+		{"10feet", "10feet", 10 * Foot},
+		{"1Yard", "1Yard", 1 * Yard},
+		{"1yard", "1yard", 1 * Yard},
+		{"1Mile", "1Mile", 1 * Mile},
+		{"1mile", "1mile", 1 * Mile},
+		{"1Miles", "1Miles", 1 * Mile},
+		{"1miles", "1miles", 1 * Mile},
 	}
 
 	for _, tt := range tests {
@@ -1248,6 +1250,8 @@ func TestSpeed_Set(t *testing.T) {
 		{"1km/h", "1km/h", 1 * KilometrePerHour},
 		{"1mph", "1mph", 1 * MilePerHour},
 		{"1fps", "1fps", 1 * FootPerSecond},
+		{"100km/h", "100km/h", 27777777777 * NanoMetrePerSecond},
+		// {"1km/h", "100km/h", Speed(float64(1*MetrePerSecond) / 3.6)},
 	}
 
 	for _, tt := range tests {
@@ -1301,6 +1305,9 @@ func TestMass_Set(t *testing.T) {
 		{"1Ounce", "1Ounce", 1 * OunceMass},
 		{"1Ounces", "1Ounces", 1 * OunceMass},
 		{"1ounces", "1ounces", 1 * OunceMass},
+		{"1oz", "1oz", 1 * OunceMass},
+		{"1Oz", "1Oz", 1 * OunceMass},
+		{"1lb", "1lb", 1 * PoundMass},
 		{"1tonne", "1tonne", 1 * Tonne},
 		{"1tonnes", "1tonnes", 1 * Tonne},
 		{"1Tonne", "1Tonne", 1 * Tonne},
@@ -1447,32 +1454,50 @@ func TestMeta_Set(t *testing.T) {
 		{"errLuminousFlux", &lux, "1.1.1.1", true},
 		{"errAngle", &degree, "1.1.1.1", true},
 		//Mininmal Implementation un-comment for WIP.
-		{"Angle", &degree, "1", false},
-		{"Distance", &metre, "1", false},
-		{"ElectricCurrent", &amp, "1", false},
-		{"ElectricPotential", &volt, "1", false},
-		{"ElectricResistance", &ohm, "1", false},
-		{"ElectricalCapacitance", &farad, "1", false},
-		{"Force", &newton, "1N", false},
-		{"Frequency", &hertz, "1Hz", false},
-		{"Mass", &gram, "1g", false},
-		{"Pressure", &pascal, "1", false},
-		{"RelativeHumidity", &humidity, "1", false},
-		{"Speed", &metresPerSecond, "1", false},
-		{"Temperature", &celsius, "1", false},
-		{"Power", &watt, "1", false},
-		{"Energy", &joule, "1", false},
-		{"LuminousIntensity", &candela, "1", false},
-		{"LuminousFlux", &lux, "1", false},
+		{"1SiUnitAngle", &degree, "1Radian", false},
+		{"1SiUnitDistance", &metre, "1m", false},
+		{"1SiUnitElectricCurrent", &amp, "1A", false},
+		{"1SiUnitElectricPotential", &volt, "1V", false},
+		{"1SiUnitElectricResistance", &ohm, "1Ohm", false},
+		{"1SiUnitElectricalCapacitance", &farad, "1F", false},
+		{"1SiUnitForce", &newton, "1N", false},
+		{"1SiUnitFrequency", &hertz, "1Hz", false},
+		{"1SiUnitMass", &gram, "1g", false},
+		{"1SiUnitPressure", &pascal, "1Pa", false},
+		{"1SiUnitRelativeHumidity", &humidity, "1%rH", false},
+		{"1SiUnitSpeed", &metresPerSecond, "1m/s", false},
+		{"1SiUnitTemperature", &celsius, "1K", false},
+		{"1SiUnitPower", &watt, "1W", false},
+		{"1SiUnitEnergy", &joule, "1J", false},
+		{"1SiUnitLuminousIntensity", &candela, "1cd", false},
+		{"1SiUnitLuminousFlux", &lux, "1lm", false},
+		// Naked values
+		{"noUnitErrAngle", &degree, "1", true},
+		{"noUnitErrDistance", &metre, "1", true},
+		{"noUnitErrElectricCurrent", &amp, "1", true},
+		{"noUnitErrElectricPotential", &volt, "1", true},
+		{"noUnitErrElectricResistance", &ohm, "1", true},
+		{"noUnitErrElectricalCapacitance", &farad, "1", true},
+		{"noUnitErrForce", &newton, "1", true},
+		{"noUnitErrFrequency", &hertz, "1", true},
+		{"noUnitErrMass", &gram, "1", true},
+		{"noUnitErrPressure", &pascal, "1", true},
+		{"noUnitErrRelativeHumidity", &humidity, "1", true},
+		{"noUnitErrSpeed", &metresPerSecond, "1", true},
+		{"noUnitErrTemperature", &celsius, "1", true},
+		{"noUnitErrPower", &watt, "1", true},
+		{"noUnitErrEnergy", &joule, "1", true},
+		{"noUnitErrLuminousIntensity", &candela, "1", true},
+		{"noUnitErrLuminousFlux", &lux, "1", true},
 	}
 
 	for _, tt := range tests {
 		got := tt.v.Set(tt.s)
 		if tt.wantErr && got == nil {
-			t.Errorf("%s expected error but got none", tt.name)
+			t.Errorf("case %s expected error but got none", tt.name)
 		}
 		if !tt.wantErr && got != nil {
-			t.Errorf("%s got unexpected error %v", tt.name, got)
+			t.Errorf("case %s got %v", tt.name, got)
 		}
 	}
 }
@@ -1594,7 +1619,7 @@ func TestDecimal_getInt(t *testing.T) {
 				t.Errorf("got %v expected %v", got, tt.want)
 			}
 			if tt.err && err == nil {
-				t.Errorf("expected error %v but got nil, %v", err, got)
+				t.Errorf("expected %v but got nil, %v", err, got)
 			}
 		})
 	}

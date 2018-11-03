@@ -81,10 +81,10 @@ func (a *Angle) Set(s string) error {
 		*a = (Angle)(v * int64(Degree) / int64(Radian))
 	case "Pi", "pi", "π":
 		*a = (Angle)(v * int64(Pi) / int64(Radian))
-	case "Radians", "radians":
-		fallthrough
-	default:
+	case "Radians", "radians", "Radian", "radian":
 		*a = (Angle)(v)
+	default:
+		return noUnits("Radian")
 	}
 	return nil
 }
@@ -144,16 +144,18 @@ func (d *Distance) Set(s string) error {
 		s = string(r[n:])
 	}
 	switch s {
+	case "mile", "Mile", "miles", "Miles":
+		*d = (Distance)(int64(scale * v * float64(Mile) / float64(Metre)))
 	case "yard", "Yard", "yards", "Yards":
 		*d = (Distance)(int64(scale * v * float64(Yard) / float64(Metre)))
 	case "foot", "Foot", "Feet", "feet", "ft", "Ft":
 		*d = (Distance)(int64(scale * v * float64(Foot) / float64(Metre)))
 	case "in", "In", "inch", "Inch", "inches", "Inches":
 		*d = (Distance)(int64(scale * v * float64(Inch) / float64(Metre)))
-	case "m", "metre", "meters":
-		fallthrough
-	default:
+	case "m", "metre", "metres", "Metre", "Metres":
 		*d = (Distance)(int64(scale * v * float64(NanoMetre)))
+	default:
+		return noUnits("m")
 	}
 	return nil
 }
@@ -180,9 +182,9 @@ func (e *ElectricCurrent) Set(s string) error {
 
 	switch s[n:] {
 	case "A", "a", "amp", "amps", "Amp", "Amps":
-		fallthrough
-	default:
 		*e = (ElectricCurrent)(v)
+	default:
+		return noUnits("A")
 	}
 	return nil
 }
@@ -217,9 +219,9 @@ func (e *ElectricPotential) Set(s string) error {
 
 	switch s[n:] {
 	case "V", "v", "volt", "Volt", "volts", "Volts":
-		fallthrough
-	default:
 		*e = (ElectricPotential)(v)
+	default:
+		return noUnits("V")
 	}
 	return nil
 }
@@ -255,9 +257,9 @@ func (e *ElectricResistance) Set(s string) error {
 
 	switch s[n:] {
 	case "Ohm", "Ohms", "ohm", "ohms", "Ω":
-		fallthrough
-	default:
 		*e = (ElectricResistance)(v)
+	default:
+		return noUnits("Ohm")
 	}
 	return nil
 }
@@ -439,12 +441,14 @@ func (m *Mass) Set(s string) error {
 	switch s[n:] {
 	case "tonne", "Tonne", "tonnes", "Tonnes":
 		*m = (Mass)((v / int64(Gram) * int64(Tonne)))
-	case "ounce", "Ounce", "ounces", "Ounces":
+	case "pound", "Pound", "pounds", "Pounds", "lb":
+		*m = (Mass)((v / int64(Gram) * int64(PoundMass)))
+	case "ounce", "Ounce", "ounces", "Ounces", "oz", "Oz":
 		*m = (Mass)((v / int64(Gram) * int64(OunceMass)))
 	case "g", "gram", "grams", "Gram", "Grams":
 		*m = (Mass)(v)
 	default:
-		return errors.New("no units given")
+		return noUnits("g")
 	}
 	return nil
 }
@@ -490,9 +494,9 @@ func (p *Pressure) Set(s string) error {
 
 	switch s[n:] {
 	case "Pa", "pa", "Pascal", "pascal", "Pascals", "pascals":
-		fallthrough
-	default:
 		*p = (Pressure)(v)
+	default:
+		return noUnits("Pa")
 	}
 	return nil
 }
@@ -538,9 +542,9 @@ func (r *RelativeHumidity) Set(s string) error {
 	case "rH", "rh":
 		*r = (RelativeHumidity)(v * 100)
 	case "%rH", "%rh":
-		fallthrough
-	default:
 		*r = (RelativeHumidity)(v)
+	default:
+		return noUnits("%rH")
 	}
 	return nil
 }
@@ -564,37 +568,45 @@ func (s Speed) String() string {
 }
 
 // Set takes a string and tries to return a valid Speed.
-func (s *Speed) Set(ss string) error {
+func (s *Speed) Set(str string) error {
 	var d decimal
-	n, err := d.set(ss)
+	n, err := d.set(str)
 	if err != nil {
 		return err
 	}
 	prefix := prefix(none)
-	if !(n == len(ss)) {
-		prefix, _ = parseSIPrefix([]rune(ss[n:])[0])
-		if prefix == milli && !(ss[n:] == "mm/s") {
+	if !(n == len(str)) {
+		var n1 int
+		prefix, n1 = parseSIPrefix([]rune(str[n:])[0])
+		if prefix == milli && !(str[n:] == "mm/s") {
 			prefix = none
 		}
-		if prefix == kilo && !(ss[n:] == "km/s") {
+		if prefix == milli && (str[n:] == "mph") {
 			prefix = none
+		}
+		if prefix == kilo && !(str[n:] == "km/s") {
+			prefix = none
+		}
+		if prefix != none {
+			n += n1
 		}
 	}
 	v, err := d.getInt(int(prefix - nano))
 	if err != nil {
 		return err
 	}
-	switch ss[n:] {
+
+	switch str[n:] {
 	case "fps":
-		*s = (Speed)((v * int64(FootPerSecond) / int64(MetrePerSecond)))
+		*s = (Speed)((v / 1000000) * 304800)
 	case "mph":
-		*s = (Speed)((v * int64(MilePerHour) / int64(MetrePerSecond)))
+		*s = (Speed)((v / 1000000) * 447040)
 	case "km/h":
-		*s = (Speed)((v * int64(KilometrePerHour) / int64(MetrePerSecond)))
+		*s = (Speed)(v * 10 / 36)
 	case "m/s":
-		fallthrough
-	default:
 		*s = (Speed)(v)
+	default:
+		return noUnits("m/s")
 	}
 	return nil
 }
@@ -611,7 +623,7 @@ const (
 
 	LightSpeed Speed = 299792458 * MetrePerSecond
 
-	KilometrePerHour Speed = 3600 * MilliMetrePerSecond
+	KilometrePerHour Speed = 277777777 * NanoMetrePerSecond
 	MilePerHour      Speed = 447040 * MicroMetrePerSecond
 	FootPerSecond    Speed = 304800 * MicroMetrePerSecond
 )
@@ -635,12 +647,18 @@ func (t *Temperature) Set(s string) error {
 		return err
 	}
 	switch s[n:] {
+	case "F":
+		v /= 1000000
+		fmt.Println(v)
+		// 96600
+		fmt.Println(((v * 5000) + 2294350) / 9)
+		*t = (Temperature)(v)
 	case "K":
-		*t = (Temperature)(v * int64(NanoKelvin))
+		*t = (Temperature)(v)
 	case "C", "°C":
 		*t = (Temperature)(v + int64(ZeroCelsius))
 	default:
-		*t = (Temperature)(v)
+		return noUnits("K or C")
 	}
 	return nil
 }
@@ -684,9 +702,9 @@ func (p *Power) Set(s string) error {
 
 	switch s[n:] {
 	case "watt", "watts", "Watt", "Watts", "W", "w":
-		fallthrough
-	default:
 		*p = (Power)(v)
+	default:
+		return noUnits("W")
 	}
 	return nil
 }
@@ -721,9 +739,9 @@ func (e *Energy) Set(s string) error {
 
 	switch s[n:] {
 	case "Joule", "Joules", "joule", "joules", "J", "j":
-		fallthrough
-	default:
 		*e = (Energy)(v)
+	default:
+		return noUnits("J")
 	}
 	return nil
 }
@@ -758,9 +776,9 @@ func (e *ElectricalCapacitance) Set(s string) error {
 
 	switch s[n:] {
 	case "f", "farad", "farads", "F", "Farad", "Farads":
-		fallthrough
-	default:
 		*e = (ElectricalCapacitance)(v)
+	default:
+		return noUnits("F")
 	}
 	return nil
 }
@@ -802,9 +820,9 @@ func (l *LuminousIntensity) Set(s string) error {
 
 	switch s[n:] {
 	case "cd", "Candela", "candela", "Candelas", "candelas":
-		fallthrough
-	default:
 		*l = (LuminousIntensity)(v)
+	default:
+		return noUnits("cd")
 	}
 	return nil
 }
@@ -844,9 +862,9 @@ func (l *LuminousFlux) Set(s string) error {
 
 	switch s[n:] {
 	case "lm", "Lumen", "lumen", "Lumens", "lumens":
-		fallthrough
-	default:
 		*l = (LuminousFlux)(v)
+	default:
+		return noUnits("lm")
 	}
 	return nil
 }
@@ -1324,7 +1342,6 @@ type prefixError struct {
 }
 
 func (s *prefixError) Error() string {
-	// if s.int != 0 {}
 	if s.err == nil {
 		return fmt.Sprintf("prefix %s does not match with any supported SI standard prefixes: f,n,p,u,m,h,k,M,G,T", s.prefix)
 	}
@@ -1338,11 +1355,11 @@ type parseError struct {
 }
 
 func (p *parseError) Error() string {
-	return fmt.Sprintf("parse error %s :%v", p.s, p.err)
+	return fmt.Sprintf("parse error: %v: \"%s\"", p.err, p.s)
 }
 
 func noUnits(s string) error {
-	return &parseError{s: s, err: errors.New("no units provided")}
+	return &parseError{s: s, err: errors.New("no units provided, need")}
 }
 
 type prefix int
