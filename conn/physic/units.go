@@ -1153,7 +1153,7 @@ func (d *decimal) dtoi(scale int) (int64, error) {
 			u *= 10
 			check := u + uint64(digit)
 			if check < u || check > max {
-				return int64(u), &parseError{err: errors.New("overflows")}
+				return int64(u), &parseError{err: errors.New("overflows maximum is"), s: strconv.FormatUint(max, 10)}
 			}
 			u = check
 		} else {
@@ -1176,7 +1176,7 @@ func (d *decimal) dtoi(scale int) (int64, error) {
 	} else {
 		check := u * powerOf10[mag]
 		if check < u || check > max {
-			return max, &parseError{err: errors.New("overflows")}
+			return max, &parseError{err: errors.New("overflows maximum is"), s: strconv.FormatUint(max, 10)}
 		}
 		u *= powerOf10[mag]
 	}
