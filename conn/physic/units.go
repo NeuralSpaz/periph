@@ -6,7 +6,6 @@ package physic
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -1307,7 +1306,7 @@ type parseError struct {
 }
 
 func (p *parseError) Error() string {
-	return fmt.Sprintf("parse error: %v: \"%s\"", p.err, p.s)
+	return "parse error: " + p.err.Error() + ": \"" + p.s + "\""
 }
 
 func noUnits(s string) error {
