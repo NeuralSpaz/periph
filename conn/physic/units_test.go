@@ -6,6 +6,7 @@ package physic
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"testing"
@@ -680,27 +681,6 @@ func TestDistance_Set(t *testing.T) {
 		fs.Parse([]string{"-d", tt.s})
 		if got != tt.want {
 			t.Errorf("%s wanted: %v(%d) but got: %v(%d)", tt.name, tt.want, tt.want, got, got)
-		}
-	}
-}
-
-func TestParseFrequency(t *testing.T) {
-	tests := []struct {
-		name    string
-		s       string
-		want    Frequency
-		wantErr bool
-	}{
-		{"100µHz", "100µHz", 100 * MicroHertz, false},
-	}
-	for _, tt := range tests {
-		got, err := ParseFrequency(tt.s)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("ParseFrequency() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
-		if got != tt.want {
-			t.Errorf("ParseFrequency() = %v, want %v", got, tt.want)
 		}
 	}
 }
@@ -1681,61 +1661,6 @@ func TestMeta_Set(t *testing.T) {
 			t.Errorf("case %s \n   got:%v \nwanted:%v", tt.name, got, tt.err)
 		}
 	}
-}
-		{"1n", decimal{"1", 0, postive}, 1, false},
-
-	for _, tt := range tests {
-		got, n, err := atod(tt.s)
-
-		if got != tt.want && !tt.err {
-			t.Errorf("got %v expected %v", got, tt.want)
-		}
-		if tt.err && err == nil {
-			t.Errorf("expected error %v but got nil", err)
-		}
-
-		if n != tt.used {
-			t.Errorf("expected to consume %d char but used %d", tt.used, n)
-		}
-	}
-}
-
-func TestDoti(t *testing.T) {
-	tests := []struct {
-		name string
-		d    decimal
-		want int64
-		err  bool
-	}{
-		{"123", decimal{"123", 0, false}, 123, false},
-		{"-123", decimal{"123", 0, true}, -123, false},
-		{"1230", decimal{"123", 1, false}, 1230, false},
-		{"-1230", decimal{"123", 1, true}, -1230, false},
-		{"1230", decimal{"123", 20, false}, 1230, true},
-		{"-1230", decimal{"123", 20, true}, -1230, true},
-		{"max", decimal{"9223372036854775807", 0, false}, 9223372036854775807, false},
-		{"-max", decimal{"9223372036854775807", 0, true}, -9223372036854775807, false},
-		{"max+1", decimal{"9223372036854775808", 0, true}, 0, true},
-		{"1a", decimal{"1a", 0, false}, 123, true},
-		{"2.7b", decimal{"2.7b", 0, true}, -123, true},
-		{"12", decimal{"123", -1, false}, 12, false},
-		{"-12", decimal{"123", -1, true}, -12, false},
-		{"123n", decimal{"123", 0, false}, 123, false},
-		{"max*10^1", decimal{"9223372036854775807", 1, false}, 9223372036854775807, true},
-		{"overflow", decimal{"9223372036854775807", 10, false}, 9223372036854775807, true},
-	}
-
-	for _, tt := range tests {
-		got, err := tt.d.dtoi(0)
-
-		if got != tt.want && !tt.err {
-			t.Errorf("got %v expected %v", got, tt.want)
-		}
-		if tt.err && err == nil {
-			t.Errorf("expected %v but got nil, %v", err, got)
-		}
-	}
-
 }
 
 func TestAtod(t *testing.T) {
