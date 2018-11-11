@@ -132,6 +132,41 @@ func (e ElectricPotential) String() string {
 	return nanoAsString(int64(e)) + "V"
 }
 
+// Set sets the ElectricPotential to the value represented by s. Units are to
+// be provided in "Volt", "Volts" or "V" with an optional SI prefix: "p", "n",
+// "u", "µ", "m", "k", "M", "G" or "T".
+func (f *ElectricPotential) Set(s string) error {
+	v, n, err := valueOfUnitString(s, nano)
+	if err != nil {
+		if e, ok := err.(*parseError); ok {
+			switch e.err {
+			case errOverflowsInt64:
+				return errors.New("maximum value is " + maxElectricPotential.String())
+			case errOverflowsInt64Negative:
+				return errors.New("minimum value is " + minElectricPotential.String())
+			case errNotANumber:
+				if found, _ := containsUnitString(s, "Volt", "Volts", "V"); found != "" {
+					return errors.New("does not contain number")
+				}
+				return errors.New("does not contain number or unit \"Volt\"")
+			}
+		}
+		return err
+	}
+	switch strings.ToLower(s[n:]) {
+	case "volt", "volts", "v":
+		*f = (ElectricPotential)(v)
+	case "":
+		return noUnits("Volt")
+	default:
+		if found, extra := containsUnitString(s[n:], "Volt", "Volts", "V"); found != "" {
+			return unknownUnitPrefix(found, extra, "p,n,u,µ,m,k,M,G or T")
+		}
+		return incorrectUnit(s[n:], "physic.ElectricPotential")
+	}
+	return nil
+}
+
 const (
 	// Volt is W/A, kg⋅m²/s³/A.
 	NanoVolt  ElectricPotential = 1
@@ -141,6 +176,9 @@ const (
 	KiloVolt  ElectricPotential = 1000 * Volt
 	MegaVolt  ElectricPotential = 1000 * KiloVolt
 	GigaVolt  ElectricPotential = 1000 * MegaVolt
+
+	maxElectricPotential = 9223372036854775807 * NanoVolt
+	minElectricPotential = -9223372036854775807 * NanoVolt
 )
 
 // ElectricResistance is a measurement of the difficulty to pass an electric
@@ -164,7 +202,7 @@ func (f *ElectricResistance) Set(s string) error {
 			switch e.err {
 			case errOverflowsInt64:
 				return errors.New("maximum value is " + maxElectricResistance.String())
-			case errUnderflowsInt64:
+			case errOverflowsInt64Negative:
 				return errors.New("minimum value is " + minElectricResistance.String())
 			case errNotANumber:
 				if found, _ := containsUnitString(s, "Ohm", "Ohms", "Ω"); found != "" {
@@ -252,13 +290,9 @@ func (f Frequency) String() string {
 	return microAsString(int64(f)) + "Hz"
 }
 
-const (
-	maxFrequency = 9223372036854775807 * MicroHertz
-	minFrequency = -9223372036854775807 * MicroHertz
-)
-
-// Set sets the Frequency to the value represented by s. Units are to be
-// provided in hertz with optional SI prefixes.
+// Set sets the Frequency to the value represented by s. Units are to
+// be provided in "Hertz" or "Hz" with an optional SI prefix: "p", "n", "u",
+// "µ", "m", "k", "M", "G" or "T".
 func (f *Frequency) Set(s string) error {
 	v, n, err := valueOfUnitString(s, micro)
 	if err != nil {
@@ -266,11 +300,10 @@ func (f *Frequency) Set(s string) error {
 			switch e.err {
 			case errOverflowsInt64:
 				return errors.New("maximum value is " + maxFrequency.String())
-			case errUnderflowsInt64:
+			case errOverflowsInt64Negative:
 				return errors.New("minimum value is " + minFrequency.String())
 			case errNotANumber:
-				found, _ := containsUnitString(s, "Hertz", "Hz")
-				if found != "" {
+				if found, _ := containsUnitString(s, "Hertz", "Hz"); found != "" {
 					return errors.New("does not contain number")
 				}
 				return errors.New("does not contain number or unit \"Hz\"")
@@ -285,9 +318,8 @@ func (f *Frequency) Set(s string) error {
 	case "":
 		return noUnits("Hz")
 	default:
-		found, extra := containsUnitString(s[n:], "Hertz", "Hz")
-		if found != "" {
-			return unknownUnitPrefix(found, extra, "n,p,u,µ,m,k,M,G or T")
+		if found, extra := containsUnitString(s[n:], "Hertz", "Hz"); found != "" {
+			return unknownUnitPrefix(found, extra, "p,n,u,µ,m,k,M,G or T")
 		}
 		return incorrectUnit(s[n:], "physic.Frequency")
 	}
@@ -315,6 +347,9 @@ const (
 	MegaHertz  Frequency = 1000 * KiloHertz
 	GigaHertz  Frequency = 1000 * MegaHertz
 	TeraHertz  Frequency = 1000 * GigaHertz
+
+	maxFrequency = 9223372036854775807 * MicroHertz
+	minFrequency = -9223372036854775807 * MicroHertz
 )
 
 // Mass is a measurement of mass stored as an int64 nano gram.
@@ -861,9 +896,9 @@ const maxInt64 = (1<<63 - 1)
 var maxUint64Str = "9223372036854775807"
 
 var (
-	errOverflowsInt64  = errors.New("exceeds maximum")
-	errUnderflowsInt64 = errors.New("exceeds minimum")
-	errNotANumber      = errors.New("not a number")
+	errOverflowsInt64         = errors.New("exceeds maximum")
+	errOverflowsInt64Negative = errors.New("exceeds minimum")
+	errNotANumber             = errors.New("not a number")
 )
 
 // Converts from decimal to int64, using the decimal.digits character values and
@@ -887,7 +922,7 @@ func dtoi(d decimal, scale int) (int64, error) {
 				if d.neg {
 					return -maxInt64, &parseError{
 						msg: "-" + maxUint64Str,
-						err: errUnderflowsInt64,
+						err: errOverflowsInt64Negative,
 					}
 				}
 				return maxInt64, &parseError{
@@ -908,7 +943,7 @@ func dtoi(d decimal, scale int) (int64, error) {
 	// mag must be positive to use as index in to powerOf10 array.
 	mag := d.exp + scale
 	if mag < 0 {
-		mag *= -1
+		mag = -mag
 	}
 	if mag > 18 {
 		return 0, errors.New("exponent exceeds int64")
@@ -922,7 +957,7 @@ func dtoi(d decimal, scale int) (int64, error) {
 			if d.neg {
 				return -maxInt64, &parseError{
 					msg: "-" + maxUint64Str,
-					err: errUnderflowsInt64,
+					err: errOverflowsInt64Negative,
 				}
 			}
 			return maxInt64, &parseError{
@@ -935,7 +970,7 @@ func dtoi(d decimal, scale int) (int64, error) {
 
 	n := int64(u)
 	if d.neg {
-		n *= -1
+		n = -n
 	}
 	return n, nil
 }

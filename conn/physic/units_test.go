@@ -841,10 +841,10 @@ func TestValueOfUnitString(t *testing.T) {
 			t.Errorf("valueOfUnitString(%s,%d) wanted: %v(%d) but got: %v(%d)", tt.in, tt.uintbase, tt.expected, tt.expected, got, got)
 		}
 		if used != tt.usedChars {
-			t.Errorf("valueOfUnitString(%s,%d) used %d chars but should used: %d chars", tt.in, tt.uintbase, used, tt.usedChars)
+			t.Errorf("valueOfUnitString(%s,%d) used %d chars but should use: %d chars", tt.in, tt.uintbase, used, tt.usedChars)
 		}
 		if err != nil {
-			t.Errorf("valueOfUnitString(%s,%d) got unexpected error: %v", tt.in, tt.uintbase, err)
+			t.Errorf("valueOfUnitString(%s,%d) unexpected error: %v", tt.in, tt.uintbase, err)
 		}
 	}
 
@@ -852,7 +852,137 @@ func TestValueOfUnitString(t *testing.T) {
 		_, _, err := valueOfUnitString(tt.in, tt.prefix)
 
 		if err == nil {
-			t.Errorf("valueOfUnitString(%s,%d) got expected error but got none", tt.in, tt.prefix)
+			t.Errorf("valueOfUnitString(%s,%d) expected an error", tt.in, tt.prefix)
+		}
+	}
+}
+
+func TestElectricPotential_Set(t *testing.T) {
+	succeeds := []struct {
+		in       string
+		expected ElectricPotential
+	}{
+		{"1nVolt", 1 * NanoVolt},
+		{"10nVolts", 10 * NanoVolt},
+		{"100nVolts", 100 * NanoVolt},
+		{"1uVolt", 1 * MicroVolt},
+		{"10uVolts", 10 * MicroVolt},
+		{"100uVolts", 100 * MicroVolt},
+		{"1µVolt", 1 * MicroVolt},
+		{"10µVolts", 10 * MicroVolt},
+		{"100µVolts", 100 * MicroVolt},
+		{"1mVolt", 1 * MilliVolt},
+		{"10mVolts", 10 * MilliVolt},
+		{"100mVolts", 100 * MilliVolt},
+		{"1Volt", 1 * Volt},
+		{"10Volts", 10 * Volt},
+		{"100Volts", 100 * Volt},
+		{"1kVolt", 1 * KiloVolt},
+		{"10kVolts", 10 * KiloVolt},
+		{"100kVolts", 100 * KiloVolt},
+		{"1MVolt", 1 * MegaVolt},
+		{"10MVolts", 10 * MegaVolt},
+		{"100MVolts", 100 * MegaVolt},
+		{"1GVolt", 1 * GigaVolt},
+		{"12.345Volts", 12345 * MilliVolt},
+		{"-12.345Volts", -12345 * MilliVolt},
+		{"9.223372036854775807GVolts", 9223372036854775807 * NanoVolt},
+		{"-9.223372036854775807GVolts", -9223372036854775807 * NanoVolt},
+		{"1MV", 1 * MegaVolt},
+	}
+
+	fails := []struct {
+		in  string
+		err string
+	}{
+		{
+			"10TVolt",
+			"exponent exceeds int64",
+		},
+		{
+			"10EVolt",
+			"contains unknown unit prefix \"E\". valid prefixes for \"Volt\" are p,n,u,µ,m,k,M,G or T",
+		},
+		{
+			"10ExaVolt",
+			"contains unknown unit prefix \"Exa\". valid prefixes for \"Volt\" are p,n,u,µ,m,k,M,G or T",
+		},
+		{
+			"10eVoltE",
+			"contains unknown unit prefix \"e\". valid prefixes for \"Volt\" are p,n,u,µ,m,k,M,G or T",
+		},
+		{
+			"10",
+			"no units provided, need Volt",
+		},
+		{
+			"9223372036854775808",
+			"maximum value is 9.223GV",
+		},
+		{
+			"-9223372036854775808",
+			"minimum value is -9.223GV",
+		},
+		{
+			"9.223372036854775808TV",
+			"maximum value is 9.223GV",
+		},
+		{
+			"-9.223372036854775808GV",
+			"minimum value is -9.223GV",
+		},
+		{
+			"9.223372036854775808GV",
+			"maximum value is 9.223GV",
+		},
+		{
+			"-9.223372036854775808GOhm",
+			"minimum value is -9.223GV",
+		},
+		{
+			"1random",
+			"\"random\" is not a valid unit for physic.ElectricPotential",
+		},
+		{
+			"Volt",
+			"does not contain number",
+		},
+		{
+			"RPM",
+			"does not contain number or unit \"Volt\"",
+		},
+		{
+			"++1Volt",
+			"multiple plus symbols ++1Volt",
+		},
+		{
+			"--1Volt",
+			"multiple minus symbols --1Volt",
+		},
+		{
+			"+-1Volt",
+			"can't contain both plus and minus symbols +-1Volt",
+		},
+		{
+			"1.1.1.1Volt",
+			"multiple decimal points 1.1.1.1Volt",
+		},
+	}
+
+	for _, tt := range succeeds {
+		var got ElectricPotential
+		if err := got.Set(tt.in); err != nil {
+			t.Errorf("ElectricPotential.Set(%s) got unexpected error: %v", tt.in, err)
+		}
+		if got != tt.expected {
+			t.Errorf("ElectricPotential.Set(%s) expected: %v(%d) but got: %v(%d)", tt.in, tt.expected, tt.expected, got, got)
+		}
+	}
+
+	for _, tt := range fails {
+		var got ElectricPotential
+		if err := got.Set(tt.in); err.Error() != tt.err {
+			t.Errorf("ElectricPotential.Set(%s) \nexpected: %s\ngot: %s", tt.in, tt.err, err)
 		}
 	}
 }
@@ -1030,15 +1160,15 @@ func TestFrequency_Set(t *testing.T) {
 		},
 		{
 			"10EHz",
-			"contains unknown unit prefix \"E\". valid prefixes for \"Hz\" are n,p,u,µ,m,k,M,G or T",
+			"contains unknown unit prefix \"E\". valid prefixes for \"Hz\" are p,n,u,µ,m,k,M,G or T",
 		},
 		{
 			"10ExaHz",
-			"contains unknown unit prefix \"Exa\". valid prefixes for \"Hz\" are n,p,u,µ,m,k,M,G or T",
+			"contains unknown unit prefix \"Exa\". valid prefixes for \"Hz\" are p,n,u,µ,m,k,M,G or T",
 		},
 		{
 			"10eHzE",
-			"contains unknown unit prefix \"e\". valid prefixes for \"Hz\" are n,p,u,µ,m,k,M,G or T",
+			"contains unknown unit prefix \"e\". valid prefixes for \"Hz\" are p,n,u,µ,m,k,M,G or T",
 		},
 		{
 			"10",
@@ -1100,22 +1230,17 @@ func TestFrequency_Set(t *testing.T) {
 
 	for _, tt := range succeeds {
 		var got Frequency
-		err := got.Set(tt.in)
-
+		if err := got.Set(tt.in); err != nil {
+			t.Errorf("Frequency.Set(%s) unexpected error: %v", tt.in, err)
+		}
 		if got != tt.expected {
 			t.Errorf("Frequency.Set(%s) wanted: %v(%d) but got: %v(%d)", tt.in, tt.expected, tt.expected, got, got)
-		}
-		if err != nil {
-			t.Errorf("Frequency.Set(%s) got unexpected error: %v", tt.in, err)
 		}
 	}
 
 	for _, tt := range fails {
 		var got Frequency
-
-		err := got.Set(tt.in)
-
-		if err.Error() != tt.err {
+		if err := got.Set(tt.in); err.Error() != tt.err {
 			t.Errorf("Frequency.Set(%s) \nexpected: %s\ngot: %s", tt.in, tt.err, err)
 		}
 	}
