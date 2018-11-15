@@ -2407,7 +2407,7 @@ func BenchmarkString2Decimal2IntNeg(b *testing.B) {
 	_ = fmt.Sprintf("%d %d", v, n)
 }
 
-func BenchmarkElectricCurrentSet(b *testing.B) {
+func BenchmarkDistanceSet(b *testing.B) {
 	var err error
 	var d Distance
 	for i := 0; i < b.N; i++ {
@@ -2420,7 +2420,7 @@ func BenchmarkElectricCurrentSet(b *testing.B) {
 	_ = fmt.Sprintf("%d", d)
 }
 
-func BenchmarkDistanceSet(b *testing.B) {
+func BenchmarkElectricCurrentSet(b *testing.B) {
 	var err error
 	var e ElectricCurrent
 	for i := 0; i < b.N; i++ {
@@ -2431,4 +2431,146 @@ func BenchmarkDistanceSet(b *testing.B) {
 	}
 	b.StopTimer()
 	_ = fmt.Sprintf("%d", e)
+}
+
+func BenchmarkElectricPotentialSet(b *testing.B) {
+	var err error
+	var e ElectricPotential
+	for i := 0; i < b.N; i++ {
+		err = e.Set("1Volt")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", e)
+}
+
+func BenchmarkElectricResistanceSet(b *testing.B) {
+	var err error
+	var r ElectricResistance
+	for i := 0; i < b.N; i++ {
+		err = r.Set("1Ohm")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", r)
+}
+
+// func BenchmarkForceSet(b *testing.B) {
+// 	var err error
+// 	var f Force
+// 	for i := 0; i < b.N; i++ {
+// 		err = f.Set("1N")
+// 		if err != nil {
+// 			b.Fatal(err)
+// 		}
+// 	}
+// 	b.StopTimer()
+// 	_ = fmt.Sprintf("%d", f)
+// }
+
+func BenchmarkFrequencySet(b *testing.B) {
+	var err error
+	var f Frequency
+	for i := 0; i < b.N; i++ {
+		err = f.Set("1Hertz")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", f)
+}
+
+// func BenchmarkMassSet(b *testing.B) {
+// 	var err error
+// 	var m Mass
+// 	for i := 0; i < b.N; i++ {
+// 		err = m.Set("1Hz")
+// 		if err != nil {
+// 			b.Fatal(err)
+// 		}
+// 	}
+// 	b.StopTimer()
+// 	_ = fmt.Sprintf("%d", m)
+// }
+
+func BenchmarkPressureSet(b *testing.B) {
+	var err error
+	var p Pressure
+	for i := 0; i < b.N; i++ {
+		err = p.Set("1Pascal")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", p)
+}
+
+func BenchmarkPowerSet(b *testing.B) {
+	var err error
+	var p Power
+	for i := 0; i < b.N; i++ {
+		err = p.Set("1Watt")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", p)
+}
+
+func BenchmarkEnergySet(b *testing.B) {
+	var err error
+	var e Energy
+	for i := 0; i < b.N; i++ {
+		err = e.Set("1Joule")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", e)
+}
+
+func BenchmarkElectricalCapacitanceSet(b *testing.B) {
+	var err error
+	var c ElectricalCapacitance
+	for i := 0; i < b.N; i++ {
+		err = c.Set("1Farad")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", c)
+}
+
+func BenchmarkLuminousIntensitySet(b *testing.B) {
+	var err error
+	var l LuminousIntensity
+	for i := 0; i < b.N; i++ {
+		err = l.Set("1Candela")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", l)
+}
+func BenchmarkLuminousFluxSet(b *testing.B) {
+	var err error
+	var l LuminousFlux
+	for i := 0; i < b.N; i++ {
+		err = l.Set("1Lumen")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.StopTimer()
+	_ = fmt.Sprintf("%d", l)
 }

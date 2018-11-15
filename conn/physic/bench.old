@@ -1,0 +1,25 @@
+bench with strings.ToLower()
+
+goos: linux
+goarch: amd64
+pkg: periph.io/x/periph/conn/physic
+BenchmarkCelsiusString-4                10000000               146 ns/op               5 B/op          1 allocs/op
+BenchmarkCelsiusFloatf-4                 2000000               699 ns/op              16 B/op          2 allocs/op
+BenchmarkCelsiusFloatg-4                 5000000               370 ns/op              16 B/op          2 allocs/op
+BenchmarkDecimal-4                      10000000               141 ns/op               4 B/op          1 allocs/op
+BenchmarkString2Decimal2Int-4           10000000               165 ns/op               4 B/op          1 allocs/op
+BenchmarkDecimalNeg-4                   10000000               145 ns/op               4 B/op          1 allocs/op
+BenchmarkString2Decimal2IntNeg-4        10000000               174 ns/op               4 B/op          1 allocs/op
+BenchmarkDistanceSet-4                  10000000               216 ns/op               8 B/op          2 allocs/op
+BenchmarkElectricCurrentSet-4           10000000               181 ns/op               6 B/op          2 allocs/op
+BenchmarkElectricPotentialSet-4         10000000               191 ns/op               8 B/op          2 allocs/op
+BenchmarkElectricResistanceSet-4        10000000               172 ns/op               6 B/op          2 allocs/op
+BenchmarkFrequencySet-4                 10000000               233 ns/op              10 B/op          2 allocs/op
+BenchmarkPressureSet-4                  10000000               250 ns/op              16 B/op          2 allocs/op
+BenchmarkPowerSet-4                     10000000               207 ns/op               8 B/op          2 allocs/op
+BenchmarkEnergySet-4                     5000000               220 ns/op              10 B/op          2 allocs/op
+BenchmarkElectricalCapacitanceSet-4     10000000               239 ns/op              10 B/op          2 allocs/op
+BenchmarkLuminousIntensitySet-4          5000000               275 ns/op              16 B/op          2 allocs/op
+BenchmarkLuminousFluxSet-4              10000000               222 ns/op              10 B/op          2 allocs/op
+PASS
+ok      periph.io/x/periph/conn/physic  37.054s
