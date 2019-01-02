@@ -30,7 +30,7 @@ func Background() Blocking { return background }
 
 type CancelFn func()
 
-type withCancel struct {
+type cancelable struct {
 	Blocking
 	done chan struct{}
 
@@ -38,41 +38,41 @@ type withCancel struct {
 	err error
 }
 
-func (wc *withCancel) Done() <-chan struct{} { return wc.done }
-func (wc *withCancel) Err() error {
-	wc.Lock()
-	defer wc.Unlock()
-	return wc.err
+func (c *cancelable) Done() <-chan struct{} { return c.done }
+func (c *cancelable) Err() error {
+	c.Lock()
+	defer c.Unlock()
+	return c.err
 }
-func (wc *withCancel) Fail(err error) {
-	wc.Lock()
-	defer wc.Unlock()
-	if wc.err != nil {
+func (c *cancelable) Fail(err error) {
+	c.Lock()
+	defer c.Unlock()
+	if c.err != nil {
 		return
 	}
-	wc.err = err
-	close(wc.done)
+	c.err = err
+	close(c.done)
 }
 
 func WithCancel(parent Blocking) (Blocking, CancelFn) {
-	wc := &withCancel{
+	c := &cancelable{
 		Blocking: parent,
 		done:     make(chan struct{}),
 	}
 
-	c := func() {
-		wc.Fail(Canceled)
+	cFn := func() {
+		c.Fail(Canceled)
 	}
 
 	go func() {
 		select {
 		case <-parent.Done():
-			wc.Fail(parent.Err())
-		case <-wc.Done():
+			c.Fail(parent.Err())
+		case <-c.Done():
 		}
 	}()
 
-	return wc, c
+	return c, cFn
 }
 
 var (
