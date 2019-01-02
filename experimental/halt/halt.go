@@ -19,7 +19,6 @@ type empty int
 
 var background = new(empty)
 
-// func (empty) Deadline() (deadline time.Time, ok bool) { return }
 func (empty) Done() <-chan struct{} { return nil }
 func (empty) Err() error            { return nil }
 func (empty) Fail(error)            {}
